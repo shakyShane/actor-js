@@ -12,6 +12,10 @@ function createFromString(input) {
 
 module.exports.create = function (config, context) {
     let count = 0;
+
+    const system = context.actorRefs['System']
+    const clientActions = context.actorRefs['ClientActions']
+    const clientActions = context.actorSelection('/ClientActions');
     return {
         name: 'FileWatcher',
         receive: function(payload, message, sender) {

@@ -22,6 +22,7 @@ const factories = {
 
 const system = createSystem();
 
+const clientActions = system.actorOf(ClientActions());
 const actor = system.actorOf(FileWatcher());
 
 // console.log(actor);
