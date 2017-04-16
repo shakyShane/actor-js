@@ -1,0 +1,3 @@
+dist/*.map binary
+dist/browser.min.js binary
+dist/browser.min.js.map binary

@@ -1,0 +1,61 @@
+{
+  "name": "actor-js",
+  "version": "1.1.0",
+  "description": "",
+  "main": "dist/index.js",
+  "devDependencies": {
+    "browserify": "^14.1.0",
+    "browserify-shim": "3.8.13",
+    "chai": "^3.5.0",
+    "connect": "^3.6.0",
+    "exorcist": "^0.4.0",
+    "hyperx": "^2.3.0",
+    "immutable": "^4.0.0-rc.1",
+    "lodash": "^4.17.4",
+    "lodash-fp": "^0.10.4",
+    "lodash.get": "^4.4.2",
+    "lodash.set": "^4.3.2",
+    "mocha": "^3.2.0",
+    "preact": "^7.2.0",
+    "rx": "^4.1.0",
+    "rxjs": "^5.2.0",
+    "tslint": "^4.5.1",
+    "typescript": "^2.2.1",
+    "typings": "^2.1.0",
+    "uglify-js": "^2.8.14"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "peerDependencies": {
+    "immutable": "^4.0.0-rc.1",
+    "rxjs": "^5.2.0"
+  },
+  "scripts": {
+    "test": "cb test",
+    "prerelease": "cb test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "browserify": {
+    "transform": [
+      "browserify-shim"
+    ]
+  },
+  "browserify-shim": {
+    "immutable": "global:Immutable",
+    "rx": "global:Rx"
+  },
+  "jest": {
+    "testPathIgnorePatterns": [
+      "dist"
+    ]
+  },
+  "dependencies": {
+    "@types/rx": "4",
+    "debug": "^2.6.3",
+    "uuid": "^3.0.1"
+  }
+}

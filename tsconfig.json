@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es5",
+    "sourceMap": true,
+    "outDir": "dist",
+    "declaration": true,
+    "lib": [ "es6", "dom" ]
+  },
+  "include": [
+    "typings/index.d.ts",
+    "vendor/index.d.ts",
+    "src/**/*.ts"
+  ]
+}

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+<h1>Staunch counter example: <span id="count">0</span></h1>
+<script src="node_modules/rx/dist/rx.all.js"></script>
+<script src="node_modules/immutable/dist/immutable.js"></script>
+<script src="dist/browser.js"></script>
+<script>
+
+    const elem = document.querySelector('#count');
+    const store = staunch.createStore({count: 0}, function(state, action) {
+        return state.update('count', count => count + 1);
+    });
+
+    window.setInterval(function() {
+        elem.textContent = store.dispatch({type: 'inc'}).toJS().count;
+    }, 1000);
+
+</script>
+</pre>
+</body>
+</html>

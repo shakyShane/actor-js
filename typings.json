@@ -1,0 +1,6 @@
+{
+  "name": "staunch",
+  "globalDependencies": {
+    "node": "registry:env/node#0.10.0+20170213133316"
+  }
+}
