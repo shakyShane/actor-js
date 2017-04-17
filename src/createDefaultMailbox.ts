@@ -1,5 +1,5 @@
 import Rx = require('rx');
-import {ask, tell} from "./index";
+import {ask, tell} from "./System";
 
 export interface MessageSenderRef {
     id: string,

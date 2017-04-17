@@ -1,3 +1,4 @@
+require('source-map-support').install();
 const Rx = require('rx');
 const {concat, of, empty} = Rx.Observable;
 const {Map} = require('immutable');
@@ -22,7 +23,7 @@ const factories = {
 
 const system = createSystem();
 
-const clientActions = system.actorOf(ClientActions());
+// const clientActions = system.actorOf(ClientActions());
 const actor = system.actorOf(FileWatcher());
 
 // console.log(actor);
@@ -37,11 +38,11 @@ msg.subscribe(x => {
     console.log(x);
 });
 
-const msg2 = actor.ask('ping');
-
-msg2.subscribe(x => {
-    console.log(x);
-});
+// const msg2 = actor.ask('ping');
+//
+// msg2.subscribe(x => {
+//     console.log(x);
+// });
 
 // const actors = Object.keys(userInput)
 // // invoke the factory
@@ -74,8 +75,8 @@ msg2.subscribe(x => {
 
 // const init    = actor.ask('init', userInput['watch']);
 
-// // store.register(actor);
-// store.register(actor2);
+// // store.actorRegister(actor);
+// store.actorRegister(actor2);
 
 // const resp1  = store.ask({type: 'Customer.read', payload: '01'});
 // const resp2  = store.ask({type: 'Basket.read', payload: '01'});
