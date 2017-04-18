@@ -17,10 +17,9 @@
     "lodash.set": "^4.3.2",
     "mocha": "^3.2.0",
     "preact": "^7.2.0",
-    "rxjs": "^5.2.0",
     "source-map-support": "^0.4.14",
-    "tslint": "^4.5.1",
-    "typescript": "^2.2.1",
+    "tslint": "^5.1.0",
+    "typescript": "^2.2.2",
     "typings": "^2.1.0",
     "uglify-js": "^2.8.14"
   },
@@ -29,8 +28,7 @@
     "src"
   ],
   "peerDependencies": {
-    "immutable": "^4.0.0-rc.1",
-    "rxjs": "^5.2.0"
+    "immutable": "^4.0.0-rc.1"
   },
   "scripts": {
     "test": "cb test",
@@ -56,6 +54,7 @@
   "dependencies": {
     "@types/rx": "4",
     "debug": "^2.6.3",
+    "rxjs": "^5.3.0",
     "uuid": "^3.0.1"
   }
 }
