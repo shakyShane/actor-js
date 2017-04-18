@@ -1,4 +1,4 @@
-const Rx = require('rx');
+const Rx = require('rxjs');
 const { empty, of } = Rx.Observable;
 const Immutable = require('immutable');
 

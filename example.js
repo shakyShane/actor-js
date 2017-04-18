@@ -1,5 +1,5 @@
 require('source-map-support').install();
-const Rx = require('rx');
+const Rx = require('rxjs');
 const {concat, of, empty} = Rx.Observable;
 const {Map} = require('immutable');
 const {createSystem} = require('./dist/index');

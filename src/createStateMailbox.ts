@@ -1,5 +1,8 @@
-import Rx = require('rx');
-const { empty, of } = Rx.Observable;
+import {Observable} from 'rxjs/Observable';
+import {Effect} from "./System";
+import {Mailbox} from "./getMailbox";
+import {StateActor} from "./createActor";
+import {Subject} from "rxjs/Subject";
 
 // A state mailbox knows how to automatically
 // map incoming messages
@@ -8,7 +11,7 @@ const { empty, of } = Rx.Observable;
 // 'effects' return more messages
 export function createStateMailbox(actor: StateActor): Mailbox {
 
-    const incomingMessages = new Rx.Subject<IncomingMessage>();
+    const incomingMessages = new Subject<IncomingMessage>();
 
     const outgoing = incomingMessages
         .flatMap((incomingMessage: IncomingMessage) => {
@@ -21,7 +24,7 @@ export function createStateMailbox(actor: StateActor): Mailbox {
 
             if (methodMatch) {
                 const response = methodMatch.call(null, incomingMessage.action.payload, incomingMessage);
-                return of({
+                return Observable.of({
                     response,
                     respId: incomingMessage.id
                 });
@@ -41,11 +44,11 @@ export function createStateMailbox(actor: StateActor): Mailbox {
                         })
                         .catch(e => {
                             console.error(actor.name, e.message);
-                            return empty();
+                            return Observable.empty();
                         })
                 } else {
 
-                    return of(output)
+                    return Observable.of(output)
                         .map(output => {
                             return {
                                 response: output,
@@ -54,11 +57,11 @@ export function createStateMailbox(actor: StateActor): Mailbox {
                         })
                         .catch((e): any => {
                             console.error(actor.name, e.message);
-                            return empty();
+                            return Observable.empty();
                         })
                 }
             }
-        return empty();
+        return Observable.empty();
     }).share();
 
     return {

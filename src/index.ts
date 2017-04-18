@@ -1,15 +1,13 @@
-import Rx = require('rx');
-import Immutable = require('immutable');
-import {createActor} from './createActor';
+import {Actor, createActor} from './createActor';
 import {createStateActor} from './createStateActor';
 import getMailbox from "./getMailbox";
 import uuid = require('uuid/v4');
 import debug = require('debug');
 import {System} from "./System";
+import {Observable} from "rxjs/Observable";
 const logger = debug('staunch');
 
 const log = (ns) => (message) => logger(`${ns}`, message);
-
 
 export function createSystem(): System {
 
@@ -21,7 +19,7 @@ export function createSystem(): System {
         .scan(function (acc, item) {
             acc[item.name] = item;
             return acc;
-        }, {}).subscribe(system.actorRegister);
+        }, <Actor>{}).subscribe(system.actorRegister);
 
     // for incoming actors, create a mailbox for each
     const actorsWithMailboxes = system.incomingActors
@@ -36,15 +34,14 @@ export function createSystem(): System {
     actorsWithMailboxes.scan((acc, { actor, mailbox }) => {
         acc[actor.name] = mailbox;
         return acc;
-    }, {}).subscribe(system.mailboxes);
+    }, <Actor>{}).subscribe(system.mailboxes);
 
     // for each registered mailbox, subscribe to
     // it's outgoing messages and pump the output
     // into the 'responses' stream
     actorsWithMailboxes.flatMap(x => {
         return x.mailbox.outgoing;
-    })
-        .subscribe(x => system.responses.onNext(x as any));
+    }).subscribe(x => system.responses.next(x as any));
 
     // the arbiter takes all incoming messages throughout
     // the entire system and distributes them as needed into
@@ -65,7 +62,7 @@ export function createSystem(): System {
             return x.actor && x.mailbox;
         })
         .do(x => {
-            x.mailbox.incoming.onNext({action: x.action, id: x.id});
+            x.mailbox.incoming.next({action: x.action, id: x.id});
         })
         .subscribe();
 

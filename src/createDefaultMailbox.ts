@@ -1,5 +1,10 @@
 import Rx = require('rx');
 import {ask, tell} from "./System";
+import {Actor} from "./createActor";
+import {Mailbox} from "./getMailbox";
+import {Subject} from "rxjs/Subject";
+import {Observable} from "rxjs/Observable";
+import {Observer} from "rxjs/Observer";
 
 export interface MessageSenderRef {
     id: string,
@@ -8,7 +13,7 @@ export interface MessageSenderRef {
 
 export function createDefaultMailbox (actor: Actor, system): Mailbox {
 
-    const incomingMessages = new Rx.Subject<IncomingMessage>();
+    const incomingMessages = new Subject<IncomingMessage>();
 
     const outgoing = incomingMessages
         .flatMap((incomingMessage: IncomingMessage) => {
@@ -17,15 +22,15 @@ export function createDefaultMailbox (actor: Actor, system): Mailbox {
             const receive = actor.receive;
 
             if (typeof receive !== 'function') {
-                return Rx.Observable.throw(new Error(`'Actors[default] must implement a receive() method`));
+                return Observable.throw(new Error(`'Actors[default] must implement a receive() method`));
             }
 
-            return Rx.Observable.create(obs => {
+            return Observable.create((obs: Observer<IOutgoingMessage>) => {
 
                 const sender = {
                     id: incomingMessage.id,
-                    reply: (message) => {
-                        obs.onNext(message);
+                    reply: (message: IOutgoingMessage) => {
+                        obs.next(message);
                     }
                 } as MessageSenderRef;
 

@@ -1,5 +1,3 @@
-// import Rx = require('rx');
-
 interface Window {
     staunch: any
 }
@@ -35,38 +33,3 @@ interface MessageResponse {
 }
 
 type Method = (payload: any, message: IncomingMessage) => any;
-
-interface IncomingActor {
-    name?: string
-    receive
-    methods?: {[methodName: string]: Method}
-}
-interface Actor {
-    name: string
-    receive
-    mailboxType: MailboxType
-    methods?: {[methodName: string]: Method}
-}
-
-interface Mailbox {
-    outgoing: Rx.Observable<any>
-    incoming: Rx.Subject<IncomingMessage>
-}
-
-type Effect = (payload: any, message: IncomingMessage) => Rx.Observable<any>;
-type MailboxType = 'default' | 'state';
-
-interface StateActor {
-    name: string
-    mailboxType: MailboxType
-    methods?: {[methodName: string]: Method}
-    effects?: {[methodName: string]: Effect}
-    missing?(payload: any, message: IncomingMessage): Rx.Observable<any>
-}
-
-interface IncomingStateActor {
-    name?: string
-    methods?: {[methodName: string]: Method}
-    effects?: {[methodName: string]: Effect}
-    missing?(payload: any, message: IncomingMessage): Rx.Observable<any>
-}

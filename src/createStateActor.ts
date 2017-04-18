@@ -1,5 +1,5 @@
 import uuid = require('uuid/v4');
-import Rx = require('rx');
+import {IncomingStateActor, StateActor} from "./createActor";
 
 export function createStateActor(input: IncomingStateActor): StateActor {
     const name    = input.name || uuid();

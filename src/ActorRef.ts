@@ -1,4 +1,5 @@
 import {System, ask, tell} from "./System";
+import {Observable} from 'rxjs/Observable';
 
 export class ActorRef {
     public address: string;
