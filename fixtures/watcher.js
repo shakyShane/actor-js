@@ -12,9 +12,6 @@ function createFromString(input) {
 
 module.exports.create = function (config, context) {
     let count = 0;
-
-    // const clientActions = context.actorSelection('/ClientActions');
-
     return {
         name: 'FileWatcher',
         receive: function(payload, message, sender) {

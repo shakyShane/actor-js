@@ -5,19 +5,24 @@ import uuid = require('uuid/v4');
 import debug = require('debug');
 import {System} from "./System";
 import {Observable} from "rxjs/Observable";
+import {IScheduler} from "rxjs/Scheduler";
 const logger = debug('staunch');
 
 const log = (ns) => (message) => logger(`${ns}`, message);
 
-export function createSystem(): System {
+export interface ICreateOptions {
+    messageScheduler?: IScheduler
+}
 
-    const system = new System();
+export function createSystem(opts: ICreateOptions = {}): System {
+
+    const system = new System(opts);
 
     // Create a global actorRegister containing actors by name
     // this is for the
     system.incomingActors
         .scan(function (acc, item) {
-            acc[item.name] = item;
+            acc[item.address] = item;
             return acc;
         }, <Actor>{}).subscribe(system.actorRegister);
 
@@ -32,7 +37,7 @@ export function createSystem(): System {
         }).share();
 
     actorsWithMailboxes.scan((acc, { actor, mailbox }) => {
-        acc[actor.name] = mailbox;
+        acc[actor.address] = mailbox;
         return acc;
     }, <Actor>{}).subscribe(system.mailboxes);
 

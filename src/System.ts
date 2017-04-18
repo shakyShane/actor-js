@@ -8,6 +8,8 @@ import {ActorRef} from "./ActorRef";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
 import {Subject} from "rxjs/Subject";
 import {async as asyncScheduler} from "rxjs/scheduler/async";
+import {ICreateOptions} from "./index";
+import {IScheduler} from "rxjs/Scheduler";
 const logger = debug('staunch:System');
 const log = (ns) => (message) => logger(`${ns}`, message);
 
@@ -20,8 +22,10 @@ export class System {
     public responses: Subject<MessageResponse>;
     public mailboxes: BehaviorSubject<any>;
     public arbiter: Subject<IncomingMessage>;
+    public address = '/system';
+    public messageScheduler: IScheduler;
 
-    constructor() {
+    constructor(opts: ICreateOptions) {
         // global actorRegister of available actors
         this.actorRegister  = new BehaviorSubject({});
         // stream for actors to actorRegister upon
@@ -32,12 +36,34 @@ export class System {
         this.mailboxes      = new BehaviorSubject({});
         // create an arbiter for handling incoming messages
         this.arbiter        = new Subject<IncomingMessage>();
+        //
+        this.messageScheduler = opts.messageScheduler || asyncScheduler;
     }
 
-    actorOf(actorFactory: any) {
-        const actor = createActor(actorFactory);
+    actorOf(actorFactory: any, path?: string) {
+        if (!path) {
+            path = uuid();
+        }
+        const _self = this;
+        const actorAddress = (() => {
+            if (path.indexOf('/system') === -1) {
+                return [this.address, path].join('/');
+            }
+            return path;
+        })();
+        const context = {
+            actorOf(factory, path?) {
+                const prefix = actorAddress;
+                if (!path) {
+                    path = uuid();
+                }
+                return _self.actorOf(factory, [prefix, path].join('/'));
+            }
+        };
+
+        const actor = createActor(actorFactory, actorAddress, context);
         this.incomingActors.next(actor);
-        const actorRef = new ActorRef(actor.name, this);
+        const actorRef = new ActorRef(actor.address, this);
         return actorRef;
     }
 }
@@ -55,7 +81,7 @@ export function ask(action: IOutgoingMessage, id?: string, system?: System): Obs
         .take(1);
 
     const messageSender = Observable
-        .of({action, id}, asyncScheduler)
+        .of({action, id}, system.messageScheduler)
         .do(log('ask outgoing ->'))
         .do(message => system.arbiter.next(message));
 
@@ -70,5 +96,5 @@ export function ask(action: IOutgoingMessage, id?: string, system?: System): Obs
 // tell() means “fire-and-forget”, e.g. send a message asynchronously and return immediately. Also known as tell.
 export function tell (action: IOutgoingMessage, id?: string, system?): Observable<any> {
     if (!id) id = uuid();
-    return Observable.of({action, id}, asyncScheduler).do(system.arbiter);
+    return Observable.of({action, id}, system.messageScheduler).do(system.arbiter);
 }

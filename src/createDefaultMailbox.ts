@@ -1,4 +1,3 @@
-import Rx = require('rx');
 import {ask, tell} from "./System";
 import {Actor} from "./createActor";
 import {Mailbox} from "./getMailbox";
@@ -34,7 +33,7 @@ export function createDefaultMailbox (actor: Actor, system): Mailbox {
                     }
                 } as MessageSenderRef;
 
-                receive.call(null, incomingMessage.action.payload, incomingMessage, sender);
+                actor.receive(incomingMessage.action.payload, incomingMessage, sender);
 
             }).map(output => {
                 return {

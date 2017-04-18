@@ -43,7 +43,7 @@ export function createStateMailbox(actor: StateActor): Mailbox {
                             }
                         })
                         .catch(e => {
-                            console.error(actor.name, e.message);
+                            console.error(actor.address, e.message);
                             return Observable.empty();
                         })
                 } else {
@@ -56,7 +56,7 @@ export function createStateMailbox(actor: StateActor): Mailbox {
                             }
                         })
                         .catch((e): any => {
-                            console.error(actor.name, e.message);
+                            console.error(actor.address, e.message);
                             return Observable.empty();
                         })
                 }
