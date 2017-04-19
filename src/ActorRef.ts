@@ -1,21 +1,13 @@
-import {System, ask, tell} from "./System";
-import {Observable} from 'rxjs/Observable';
-
 export class ActorRef {
-    public address: string;
-    public system: System;
 
-    constructor(address: string, system: System) {
-        this.address = address;
-        this.system = system;
-    }
+    constructor(public address: string, public context) {}
 
     ask(payload) {
         const outgoing = {
             type: this.address,
             payload
         };
-        return ask(outgoing, null, this.system);
+        return this.context.ask(outgoing);
     }
 
     tell(payload) {
@@ -23,6 +15,6 @@ export class ActorRef {
             type: this.address,
             payload
         };
-        return tell(outgoing, null, this.system);
+        return this.context.tell(outgoing);
     }
 }

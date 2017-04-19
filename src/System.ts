@@ -44,13 +44,16 @@ export class System {
         if (!path) {
             path = uuid();
         }
+
         const _self = this;
+
         const actorAddress = (() => {
             if (path.indexOf('/system') === -1) {
                 return [this.address, path].join('/');
             }
             return path;
         })();
+
         const context = {
             actorOf(factory, path?) {
                 const prefix = actorAddress;
@@ -63,38 +66,44 @@ export class System {
 
         const actor = createActor(actorFactory, actorAddress, context);
         this.incomingActors.next(actor);
-        const actorRef = new ActorRef(actor.address, this);
+        const actorRef = new ActorRef(actor.address, this.getActorRefContext(actor));
         return actorRef;
     }
-}
+    getActorRefContext(actor: Actor) {
+        return {
+            ask: this.ask.bind(this),
+            tell: this.tell.bind(this)
+        }
+    }
 
-// the send method is how actors post messages to each other
-// it's guaranteed to happen in an async manner
-// ask() sends a message asynchronously and returns a Future representing a possible reply. Also known as ask.
-export function ask(action: IOutgoingMessage, id?: string, system?: System): Observable<any> {
-    if (!id) id = uuid();
+    /**
+     * the ask method is how actors post messages to each other
+     * it's guaranteed to happen in an async manner
+     * ask() sends a message asynchronously and returns a Future representing a possible reply. Also known as ask.
+     * @param action
+     * @param id
+     */
+    ask(action: IOutgoingMessage, id?: string): Observable<any> {
+        if (!id) id = uuid();
 
-    const trackResponse = system.responses
-        .filter(x => x.respId === id)
-        .do(log('ask resp <-'))
-        .map(x => x.response)
-        .take(1);
+        const trackResponse = this.responses
+            .filter(x => x.respId === id)
+            .do(log('ask resp <-'))
+            .map(x => x.response)
+            .take(1);
 
-    const messageSender = Observable
-        .of({action, id}, system.messageScheduler)
-        .do(log('ask outgoing ->'))
-        .do(message => system.arbiter.next(message));
+        const messageSender = Observable
+            .of({action, id}, this.messageScheduler)
+            .do(log('ask outgoing ->'))
+            .do(message => this.arbiter.next(message));
 
-    return Observable.zip(trackResponse, messageSender, (resp) => resp);
-}
+        return Observable.zip(trackResponse, messageSender, (resp) => resp);
+    }
 
-/**
- * @param action
- * @param id
- * @return void
- */
-// tell() means “fire-and-forget”, e.g. send a message asynchronously and return immediately. Also known as tell.
-export function tell (action: IOutgoingMessage, id?: string, system?): Observable<any> {
-    if (!id) id = uuid();
-    return Observable.of({action, id}, system.messageScheduler).do(system.arbiter);
+    /**
+     * tell() means “fire-and-forget”, e.g. send a message asynchronously and return immediately. Also known as tell.
+     */
+    tell(action: IOutgoingMessage, id?: string): Observable<any> {
+        return Observable.of({action, id}, this.messageScheduler).do(this.arbiter);
+    }
 }

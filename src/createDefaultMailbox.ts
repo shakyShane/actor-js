@@ -1,4 +1,3 @@
-import {ask, tell} from "./System";
 import {Actor} from "./createActor";
 import {Mailbox} from "./getMailbox";
 import {Subject} from "rxjs/Subject";
