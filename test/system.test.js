@@ -23,7 +23,7 @@ it('it can create a /system level actor', function () {
     assert.equal(actor.address, '/system/FileWatcher');
 });
 
-it('actor can create a child actor', function () {
+it('/system -> child', function () {
     const scheduler = new TestScheduler();
     const system = createSystem({
         messageScheduler: scheduler
@@ -49,6 +49,49 @@ it('actor can create a child actor', function () {
                     this.actors.push(
                         this.context.actorOf(Watcher, 'sub-path-01')
                     );
+            }
+        }
+    };
+    const actor = system.actorOf(FileWatcher, 'FileWatcher');
+    assert.equal(actor.address, '/system/FileWatcher');
+    actor.tell('init').subscribe();
+    scheduler.flush();
+    const register = system.actorRegister.getValue();
+    assert.equal(register['/system/FileWatcher'].type, 'FileWatcher');
+    assert.equal(register['/system/FileWatcher'].actors[0].address, '/system/FileWatcher/sub-path-01');
+});
+
+it('/system/actor -> child -> child', function () {
+    const scheduler = new TestScheduler();
+    const system = createSystem({
+        messageScheduler: scheduler
+    });
+    const Watcher = class {
+        constructor(address) {
+            this.type        = 'Watcher';
+            this.mailboxType = 'default';
+            this.address = address;
+        }
+        // todo - sender here should also be an actor ref
+        receive(payload, message, sender) {
+            assert.equal(payload, 'Hey!');
+        }
+    };
+    const FileWatcher = class {
+        constructor(address, context) {
+            this.type        = 'FileWatcher';
+            this.mailboxType = 'default';
+            this.address     = address;
+            this.actors      = [];
+            this.context     = context;
+        }
+        receive(payload) {
+            switch(payload) {
+                case 'init':
+                    this.actors.push(
+                        this.context.actorOf(Watcher, 'sub-path-01')
+                    );
+                    this.actors[0].tell('Hey!').subscribe();
             }
         }
     };
