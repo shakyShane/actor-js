@@ -19,7 +19,7 @@ even in single-threaded programming environments such as Javascript.
 ### Actor context `ActorContext`
 - [ ] `context.stopSelf()` - allow an actor to stop itself
 - [ ] `context.stopChild(childRef)` - allow an actor to tear down a child
-- [ ] `context.actorOf(childRef)` - allow an actor to create more actors
+- [x] `context.actorOf(childRef)` - allow an actor to create more actors
 - [ ] `context.become(newHandler)` - designate a new handler for future messages [http://doc.akka.io/docs/akka/current/scala/actors.html#Graceful_Stop](http://doc.akka.io/docs/akka/current/scala/actors.html#Graceful_Stop)
 - [ ] `context.actorSelector(lookup)` - allow actor lookus via paths, such as `/system` `/deadletter` etc
 
