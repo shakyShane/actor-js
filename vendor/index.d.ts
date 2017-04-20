@@ -18,7 +18,7 @@ interface ActorRef {
 type MessageId = string;
 
 interface IncomingMessage {
-    id: MessageId
+    messageID: MessageId
     action: IOutgoingMessage
 }
 

@@ -52,7 +52,7 @@ export function createSystem(opts: ICreateOptions = {}): System {
     // the entire system and distributes them as needed into
     // the correct mailboxes
     system.arbiter
-        .withLatestFrom(system.actorRegister, system.mailboxes, function ({action, id}, register, mailboxes) {
+        .withLatestFrom(system.actorRegister, system.mailboxes, function ({action, messageID}, register, mailboxes) {
             const [ name ] = action.address.split('.');
             return {
                 action,
@@ -60,14 +60,14 @@ export function createSystem(opts: ICreateOptions = {}): System {
                 mailbox: mailboxes[name],
                 register,
                 name,
-                id
+                messageID
             }
         })
         .filter(x => {
             return x.actor && x.mailbox;
         })
         .do(x => {
-            x.mailbox.incoming.next({action: x.action, id: x.id});
+            x.mailbox.incoming.next({action: x.action, messageID: x.messageID});
         })
         .subscribe();
 

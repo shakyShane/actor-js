@@ -17,6 +17,7 @@ export function createStateMailbox(actor: StateActor): Mailbox {
         .flatMap((incomingMessage: IncomingMessage) => {
 
             const [_, method]  = incomingMessage.action.address.split('.');
+            const {messageID}  = incomingMessage;
             const methodMatch  : Method = actor.methods ? actor.methods[method] : null;
             const effectMatch  : Effect = actor.effects ? actor.effects[method] : null;
             const missingMatch : Effect = actor.missing ? actor.missing : null;
@@ -26,7 +27,7 @@ export function createStateMailbox(actor: StateActor): Mailbox {
                 const response = methodMatch.call(null, incomingMessage.action.payload, incomingMessage);
                 return Observable.of({
                     response,
-                    respId: incomingMessage.id
+                    respId: messageID
                 });
             }
 
@@ -39,7 +40,7 @@ export function createStateMailbox(actor: StateActor): Mailbox {
                         .map(output => {
                             return {
                                 response: output,
-                                respId: incomingMessage.id
+                                respId: messageID
                             }
                         })
                         .catch(e => {
@@ -52,7 +53,7 @@ export function createStateMailbox(actor: StateActor): Mailbox {
                         .map(output => {
                             return {
                                 response: output,
-                                respId: incomingMessage.id
+                                respId: messageID
                             }
                         })
                         .catch((e): any => {

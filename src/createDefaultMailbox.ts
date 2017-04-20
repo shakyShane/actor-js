@@ -25,7 +25,7 @@ export function createDefaultMailbox (actor: Actor, system): Mailbox {
             return Observable.create((obs: Observer<IOutgoingMessage>) => {
 
                 const sender = {
-                    id: incomingMessage.id,
+                    id: incomingMessage.messageID,
                     reply: (message: IOutgoingMessage) => {
                         obs.next(message);
                     }
@@ -36,7 +36,7 @@ export function createDefaultMailbox (actor: Actor, system): Mailbox {
             }).map(output => {
                 return {
                     response: output,
-                    respId: incomingMessage.id
+                    respId: incomingMessage.messageID
                 }
             });
 

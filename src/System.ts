@@ -30,7 +30,7 @@ export class System {
         this.actorRegister  = new BehaviorSubject({});
         // stream for actors to actorRegister upon
         this.incomingActors = new Subject<Actor|StateActor>();
-        // responses stream where actors can 'reply' via an id
+        // responses stream where actors can 'reply' via an messageID
         this.responses      = new Subject<MessageResponse>();
         // an object containing all mailboxes
         this.mailboxes      = new BehaviorSubject({});
@@ -75,19 +75,19 @@ export class System {
      * it's guaranteed to happen in an async manner
      * ask() sends a message asynchronously and returns a Future representing a possible reply. Also known as ask.
      * @param action
-     * @param id
+     * @param messageID
      */
-    ask(action: IOutgoingMessage, id?: string): Observable<any> {
-        if (!id) id = uuid();
+    ask(action: IOutgoingMessage, messageID?: string): Observable<any> {
+        if (!messageID) messageID = uuid();
 
         const trackResponse = this.responses
-            .filter(x => x.respId === id)
+            .filter(x => x.respId === messageID)
             .do(log('ask resp <-'))
             .map(x => x.response)
             .take(1);
 
         const messageSender = Observable
-            .of({action, id}, this.messageScheduler)
+            .of({action, messageID}, this.messageScheduler)
             .do(log('ask outgoing ->'))
             .do(message => this.arbiter.next(message));
 
@@ -97,9 +97,9 @@ export class System {
     /**
      * tell() means “fire-and-forget”, e.g. send a message asynchronously and return immediately. Also known as tell.
      */
-    tell(action: IOutgoingMessage, id?: string): Observable<any> {
-        if (!id) id = uuid();
+    tell(action: IOutgoingMessage, messageID?: string): Observable<any> {
+        if (!messageID) messageID = uuid();
 
-        return Observable.of({action, id}, this.messageScheduler).do(this.arbiter);
+        return Observable.of({action, messageID}, this.messageScheduler).do(this.arbiter);
     }
 }
