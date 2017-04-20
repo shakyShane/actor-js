@@ -1,4 +1,4 @@
-import {Actor, createActor, StateActor} from "./createActor";
+import {Actor, StateActor} from "./createActor";
 import {Observable} from 'rxjs/Observable';
 import './rx';
 
@@ -10,6 +10,7 @@ import {Subject} from "rxjs/Subject";
 import {async as asyncScheduler} from "rxjs/scheduler/async";
 import {ICreateOptions} from "./index";
 import {IScheduler} from "rxjs/Scheduler";
+import {IActorContext} from "./ActorContext";
 const logger = debug('staunch:System');
 const log = (ns) => (message) => logger(`${ns}`, message);
 
@@ -40,34 +41,39 @@ export class System {
         this.messageScheduler = opts.messageScheduler || asyncScheduler;
     }
 
-    actorOf(actorFactory: any, path?: string) {
-        if (!path) {
-            path = uuid();
-        }
+    /**
+     * Create a new actor from a factory + optional path
+     * note: A UUID path will be created if this
+     * @param actorFactory
+     * @param path
+     * @returns {ActorRef}
+     */
+    public actorOf(actorFactory: any, path?: string): ActorRef {
 
-        const _self = this;
+        const actorAddress = this.createActorAddress(path);
+        const context      = this.createContext(actorAddress);
+        const actor        = this.createActor(actorFactory, actorAddress, context);
 
-        const actorAddress = (() => {
-            if (path.indexOf('/system') === -1) {
-                return [this.address, path].join('/');
-            }
-            return path;
-        })();
+        this.incomingActors.next(actor);
 
-        const context = {
+        return new ActorRef(actor.address, this);
+    }
+
+    private createActor(factory, address: string, context: IActorContext): Actor {
+        return new factory(address, context);
+    }
+
+    private createContext(address: string): IActorContext {
+        const bound = this.actorOf.bind(this);
+        return {
             actorOf(factory, path?) {
-                const prefix = actorAddress;
+                const prefix = address;
                 if (!path) {
                     path = uuid();
                 }
-                return _self.actorOf(factory, [prefix, path].join('/'));
+                return bound(factory, [prefix, path].join('/'));
             }
-        };
-
-        const actor = createActor(actorFactory, actorAddress, context);
-        this.incomingActors.next(actor);
-        const actorRef = new ActorRef(actor.address, this);
-        return actorRef;
+        }
     }
 
     /**
@@ -77,7 +83,7 @@ export class System {
      * @param action
      * @param messageID
      */
-    ask(action: IOutgoingMessage, messageID?: string): Observable<any> {
+    public ask(action: IOutgoingMessage, messageID?: string): Observable<any> {
         if (!messageID) messageID = uuid();
 
         const trackResponse = this.responses
@@ -97,9 +103,21 @@ export class System {
     /**
      * tell() means “fire-and-forget”, e.g. send a message asynchronously and return immediately. Also known as tell.
      */
-    tell(action: IOutgoingMessage, messageID?: string): Observable<any> {
+    public tell(action: IOutgoingMessage, messageID?: string): Observable<any> {
         if (!messageID) messageID = uuid();
 
         return Observable.of({action, messageID}, this.messageScheduler).do(this.arbiter);
+    }
+
+    private createActorAddress(path: string): string {
+        if (!path) {
+            path = uuid();
+        }
+
+        if (path.indexOf('/system') === -1) {
+            return [this.address, path].join('/');
+        }
+
+        return path;
     }
 }

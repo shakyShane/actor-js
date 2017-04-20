@@ -1,8 +1,9 @@
 import {MailboxType} from "./getMailbox";
-import {Effect} from "./System";
+import {Effect, System} from "./System";
 import {Observable} from "rxjs/Observable";
+import uuid = require('uuid/v4');
 
-export function createActor (factory, address, context): Actor {
+export function createActor (factory, address: string, context): Actor {
     return new factory(address, context);
 }
 
@@ -16,7 +17,6 @@ export interface Actor {
 
 export interface IncomingActor {
     name?: string
-    receive
     methods?: {[methodName: string]: Method}
 }
 
