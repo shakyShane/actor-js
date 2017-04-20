@@ -66,14 +66,8 @@ export class System {
 
         const actor = createActor(actorFactory, actorAddress, context);
         this.incomingActors.next(actor);
-        const actorRef = new ActorRef(actor.address, this.getActorRefContext(actor));
+        const actorRef = new ActorRef(actor.address, this);
         return actorRef;
-    }
-    getActorRefContext(actor: Actor) {
-        return {
-            ask: this.ask.bind(this),
-            tell: this.tell.bind(this)
-        }
     }
 
     /**
@@ -104,6 +98,8 @@ export class System {
      * tell() means “fire-and-forget”, e.g. send a message asynchronously and return immediately. Also known as tell.
      */
     tell(action: IOutgoingMessage, id?: string): Observable<any> {
+        if (!id) id = uuid();
+
         return Observable.of({action, id}, this.messageScheduler).do(this.arbiter);
     }
 }

@@ -23,7 +23,7 @@ interface IncomingMessage {
 }
 
 interface IOutgoingMessage {
-    type: string,
+    address: string,
     payload?: any
 }
 

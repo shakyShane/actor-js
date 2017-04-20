@@ -16,10 +16,9 @@ export function createDefaultMailbox (actor: Actor, system): Mailbox {
     const outgoing = incomingMessages
         .flatMap((incomingMessage: IncomingMessage) => {
 
-            const [_, method] = incomingMessage.action.type.split('.');
-            const receive = actor.receive;
+            const { address, payload } = incomingMessage.action;
 
-            if (typeof receive !== 'function') {
+            if (typeof actor.receive !== 'function') {
                 return Observable.throw(new Error(`'Actors[default] must implement a receive() method`));
             }
 
@@ -32,7 +31,7 @@ export function createDefaultMailbox (actor: Actor, system): Mailbox {
                     }
                 } as MessageSenderRef;
 
-                actor.receive(incomingMessage.action.payload, incomingMessage, sender);
+                actor.receive(payload, incomingMessage, sender);
 
             }).map(output => {
                 return {

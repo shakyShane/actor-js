@@ -85,7 +85,7 @@ it('/system/actor -> child -> child', function () {
             this.actors      = [];
             this.context     = context;
         }
-        receive(payload) {
+        receive(payload, message, sender) {
             switch(payload) {
                 case 'init':
                     this.actors.push(

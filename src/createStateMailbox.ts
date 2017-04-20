@@ -16,7 +16,7 @@ export function createStateMailbox(actor: StateActor): Mailbox {
     const outgoing = incomingMessages
         .flatMap((incomingMessage: IncomingMessage) => {
 
-            const [_, method]  = incomingMessage.action.type.split('.');
+            const [_, method]  = incomingMessage.action.address.split('.');
             const methodMatch  : Method = actor.methods ? actor.methods[method] : null;
             const effectMatch  : Effect = actor.effects ? actor.effects[method] : null;
             const missingMatch : Effect = actor.missing ? actor.missing : null;

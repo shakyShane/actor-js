@@ -53,7 +53,7 @@ export function createSystem(opts: ICreateOptions = {}): System {
     // the correct mailboxes
     system.arbiter
         .withLatestFrom(system.actorRegister, system.mailboxes, function ({action, id}, register, mailboxes) {
-            const [ name ] = action.type.split('.');
+            const [ name ] = action.address.split('.');
             return {
                 action,
                 actor: register[name],
