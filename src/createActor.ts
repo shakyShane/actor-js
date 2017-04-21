@@ -3,12 +3,12 @@ import {Effect, System} from "./System";
 import {Observable} from "rxjs/Observable";
 import uuid = require('uuid/v4');
 
-export function createActor (factory, address: string, context): Actor {
+export function createActor (factory, address: string, context): IActor {
     return new factory(address, context);
 }
 
 
-export interface Actor {
+export interface IActor {
     type: string
     receive(payload, message, sender): void;
     address: string;

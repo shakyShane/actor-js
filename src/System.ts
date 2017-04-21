@@ -1,4 +1,4 @@
-import {Actor, StateActor} from "./createActor";
+import {IActor, StateActor} from "./createActor";
 import {Observable} from 'rxjs/Observable';
 import './rx';
 
@@ -20,18 +20,19 @@ export type Effect = (payload: any, message: IncomingMessage) => Observable<any>
 export class System {
 
     public actorRegister: BehaviorSubject<any>;
-    public incomingActors: Subject<Actor|StateActor>;
+    public incomingActors: Subject<IActor|StateActor>;
     public responses: Subject<MessageResponse>;
     public mailboxes: BehaviorSubject<any>;
     public arbiter: Subject<IncomingMessage>;
     public address = '/system';
+    public mailboxTypes = new Set(['default', 'state']);
     public messageScheduler: IScheduler;
 
     constructor(opts: ICreateOptions) {
         // global actorRegister of available actors
         this.actorRegister  = new BehaviorSubject({});
         // stream for actors to actorRegister upon
-        this.incomingActors = new Subject<Actor|StateActor>();
+        this.incomingActors = new Subject<IActor|StateActor>();
         // responses stream where actors can 'reply' via an messageID
         this.responses      = new Subject<MessageResponse>();
         // an object containing all mailboxes
@@ -55,27 +56,52 @@ export class System {
         const context      = this.createContext(actorAddress);
         const actor        = this.createActor(actorFactory, actorAddress, context);
 
+        if (!actor.mailboxType) {
+            actor.mailboxType = 'default';
+        } else {
+            if (!this.mailboxTypes.has(actor.mailboxType)) {
+                console.error('Mailbox type not supported');
+                actor.mailboxType = 'default';
+            }
+        }
+
+        if (!actor.address) {
+            actor.address = actorAddress;
+        }
+
         this.incomingActors.next(actor);
 
         return new ActorRef(actor.address, this);
     }
 
-    public actorSelection(lookup): ActorRef[] {
+    public actorSelection(search, prefix?: string): ActorRef[] {
+
         const actorRegister = this.actorRegister.getValue();
         const addresses     = Object.keys(actorRegister);
-        const matcher       = anymatch(lookup);
+
+        const lookup = (() => {
+            // if an absolute path is given, always use as-is
+            if (search[0] === '/') {
+                return search;
+            }
+            return [(prefix || this.address), search].join('/');
+        })();
+
+        const matcher = anymatch(lookup);
 
         return addresses
             .filter(matcher)
             .map(address => new ActorRef(address, this));
     }
 
-    private createActor(factory, address: string, context: IActorContext): Actor {
+    private createActor(factory, address: string, context: IActorContext): IActor {
         return new factory(address, context);
     }
 
     private createContext(parentAddress: string): IActorContext {
         const bound = this.actorOf.bind(this);
+        const boundSelection = this.actorSelection.bind(this);
+
         return {
             actorOf(factory, localAddress?) {
                 const prefix = parentAddress;
@@ -83,6 +109,9 @@ export class System {
                     localAddress = uuid();
                 }
                 return bound(factory, [prefix, localAddress].join('/'));
+            },
+            actorSelection(search) {
+                return boundSelection(search, parentAddress);
             }
         }
     }
@@ -116,7 +145,6 @@ export class System {
      */
     public tell(action: IOutgoingMessage, messageID?: string): Observable<any> {
         if (!messageID) messageID = uuid();
-
         return Observable.of({action, messageID}, this.messageScheduler).do(this.arbiter);
     }
 

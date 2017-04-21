@@ -1,4 +1,4 @@
-import {Actor, createActor} from './createActor';
+import {IActor, createActor} from './createActor';
 import {createStateActor} from './createStateActor';
 import getMailbox from "./getMailbox";
 import uuid = require('uuid/v4');
@@ -6,25 +6,26 @@ import debug = require('debug');
 import {System} from "./System";
 import {Observable} from "rxjs/Observable";
 import {IScheduler} from "rxjs/Scheduler";
+import {ActorFactory, SystemActor} from "./SystemActor";
 const logger = debug('staunch');
 
 const log = (ns) => (message) => logger(`${ns}`, message);
 
 export interface ICreateOptions {
     messageScheduler?: IScheduler
+    factory?: ActorFactory
 }
 
 export function createSystem(opts: ICreateOptions = {}): System {
 
     const system = new System(opts);
 
-    // Create a global actorRegister containing actors by name
-    // this is for the
+    // Create a global actorRegister containing actors by address
     system.incomingActors
         .scan(function (acc, item) {
             acc[item.address] = item;
             return acc;
-        }, <Actor>{}).subscribe(system.actorRegister);
+        }, <IActor>{}).subscribe(system.actorRegister);
 
     // for incoming actors, create a mailbox for each
     const actorsWithMailboxes = system.incomingActors
@@ -39,7 +40,7 @@ export function createSystem(opts: ICreateOptions = {}): System {
     actorsWithMailboxes.scan((acc, { actor, mailbox }) => {
         acc[actor.address] = mailbox;
         return acc;
-    }, <Actor>{}).subscribe(system.mailboxes);
+    }, <IActor>{}).subscribe(system.mailboxes);
 
     // for each registered mailbox, subscribe to
     // it's outgoing messages and pump the output
@@ -70,6 +71,9 @@ export function createSystem(opts: ICreateOptions = {}): System {
             x.mailbox.incoming.next({action: x.action, messageID: x.messageID});
         })
         .subscribe();
+
+    // register the /system actor
+    system.actorOf(opts.factory || SystemActor, '/system');
 
     return system;
 }
