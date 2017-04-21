@@ -4,6 +4,7 @@ import './rx';
 
 import debug = require('debug');
 import uuid = require('uuid/v4');
+import anymatch = require('anymatch');
 import {ActorRef} from "./ActorRef";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
 import {Subject} from "rxjs/Subject";
@@ -45,12 +46,12 @@ export class System {
      * Create a new actor from a factory + optional path
      * note: A UUID path will be created if this
      * @param actorFactory
-     * @param path
+     * @param address
      * @returns {ActorRef}
      */
-    public actorOf(actorFactory: any, path?: string): ActorRef {
+    public actorOf(actorFactory: any, address?: string): ActorRef {
 
-        const actorAddress = this.createActorAddress(path);
+        const actorAddress = this.createActorAddress(address);
         const context      = this.createContext(actorAddress);
         const actor        = this.createActor(actorFactory, actorAddress, context);
 
@@ -59,19 +60,29 @@ export class System {
         return new ActorRef(actor.address, this);
     }
 
+    public actorSelection(lookup): ActorRef[] {
+        const actorRegister = this.actorRegister.getValue();
+        const addresses     = Object.keys(actorRegister);
+        const matcher       = anymatch(lookup);
+
+        return addresses
+            .filter(matcher)
+            .map(address => new ActorRef(address, this));
+    }
+
     private createActor(factory, address: string, context: IActorContext): Actor {
         return new factory(address, context);
     }
 
-    private createContext(address: string): IActorContext {
+    private createContext(parentAddress: string): IActorContext {
         const bound = this.actorOf.bind(this);
         return {
-            actorOf(factory, path?) {
-                const prefix = address;
-                if (!path) {
-                    path = uuid();
+            actorOf(factory, localAddress?) {
+                const prefix = parentAddress;
+                if (!localAddress) {
+                    localAddress = uuid();
                 }
-                return bound(factory, [prefix, path].join('/'));
+                return bound(factory, [prefix, localAddress].join('/'));
             }
         }
     }

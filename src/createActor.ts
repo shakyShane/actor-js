@@ -7,6 +7,7 @@ export function createActor (factory, address: string, context): Actor {
     return new factory(address, context);
 }
 
+
 export interface Actor {
     type: string
     receive(payload, message, sender): void;
