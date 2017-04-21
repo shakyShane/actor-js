@@ -11,6 +11,8 @@ export function createActor (factory, address: string, context): IActor {
 export interface IActor {
     type: string
     receive(payload, message, sender): void;
+    postStart?(): void;
+    preStart?(): void;
     address: string;
     mailboxType: MailboxType
     methods?: {[methodName: string]: Method}

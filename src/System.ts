@@ -4,6 +4,7 @@ import './rx';
 
 import debug = require('debug');
 import uuid = require('uuid/v4');
+import path = require('path');
 import anymatch = require('anymatch');
 import {ActorRef} from "./ActorRef";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
@@ -69,7 +70,15 @@ export class System {
             actor.address = actorAddress;
         }
 
+        if (actor.preStart) {
+            actor.preStart();
+        }
+
         this.incomingActors.next(actor);
+
+        if (actor.postStart) {
+            actor.postStart();
+        }
 
         return new ActorRef(actor.address, this);
     }
@@ -87,7 +96,9 @@ export class System {
             return [(prefix || this.address), search].join('/');
         })();
 
-        const matcher = anymatch(lookup);
+        // strip any trailing slashes
+        const stripped = lookup.replace(/\/$/, '');
+        const matcher  = anymatch(path.join(stripped));
 
         return addresses
             .filter(matcher)
