@@ -70,10 +70,6 @@ it('can select system at the actor level', function () {
     });
     const Guardian = class {
         constructor(address, context) {
-            this.type = 'Guardian';
-            this.mailboxType = 'default';
-            this.address = address;
-            this.context = context;
             const systemActor = context.actorSelection('/system');
             // send a message to the system actor
             systemActor[0].tell('ping').subscribe();
@@ -83,7 +79,5 @@ it('can select system at the actor level', function () {
         }
     };
     const actor = system.actorOf(Guardian, 'guardian-actor-01');
-    // const selected = system.actorSelection('/system/guardian-actor-01');
-    // selected[0].tell('ping').subscribe();
     scheduler.flush();
 });
