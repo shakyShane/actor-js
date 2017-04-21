@@ -68,16 +68,18 @@ it('can select system at the actor level', function () {
         messageScheduler: scheduler,
         factory: replacedSystem
     });
-    const Guardian = class {
-        constructor(address, context) {
-            const systemActor = context.actorSelection('/system');
-            // send a message to the system actor
-            systemActor[0].tell('ping').subscribe();
-        }
-        receive(payload) {
 
+    const Guardian = function(address, context) {
+        const systemActor = context.actorSelection('/system');
+        // send a message to the system actor
+        systemActor[0].tell('ping').subscribe();
+        return {
+            receive() {
+
+            }
         }
     };
+
     const actor = system.actorOf(Guardian, 'guardian-actor-01');
     scheduler.flush();
 });
