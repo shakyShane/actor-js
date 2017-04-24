@@ -65,8 +65,6 @@ it('can stop actors from actor level', function () {
     const guardianRef = system.actorOf(Guardian, 'guardian-01');
     guardianRef.tell('interrupt-child').subscribe();
     scheduler.flush();
-    // console.log(system.actorRegister.getValue())
-    // console.log(calls);
     assert.deepEqual(calls, [
         'Guardian postStart',
         'child receive stop',

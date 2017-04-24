@@ -115,7 +115,7 @@ export class System {
             .subscribe();
     }
 
-    private stopActor(actorRef) {
+    private stopActor(actorRef: ActorRef): Observable<any> {
         return Observable.create(observer => {
             const reg = this.actorRegister.getValue();
             const selectedActor = reg[actorRef.address];
