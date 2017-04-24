@@ -43,7 +43,7 @@ even in single-threaded programming environments such as Javascript.
     - [x] path is reserved
     - [ ] uuid is assigned
     - [x] actor instance is created
-    - [ ] preStart is called on instance
+    - [x] preStart is called on instance
     
 - Incarnation
     - [ ] new instance replaces old
@@ -63,5 +63,5 @@ even in single-threaded programming environments such as Javascript.
 - [x] `actorOf()` only ever creates a new actor, and it creates it as a direct child of the context 
     on which this method is invoked (which may be any actor or actor system).
 - [ ] `/deadletters` all messages sent to stopped or non-existing actors are re-routed here 
-- [ ] `/system` is the guardian actor for all system-created top-level actors, e.g. logging 
+- [x] `/system` is the guardian actor for all system-created top-level actors, e.g. logging 
     listeners or actors automatically deployed by configuration at the start of the actor system.
