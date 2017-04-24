@@ -13,6 +13,8 @@ import {async as asyncScheduler} from "rxjs/scheduler/async";
 import {ICreateOptions} from "./index";
 import {IScheduler} from "rxjs/Scheduler";
 import {IActorContext} from "./ActorContext";
+import Disposable = Rx.Disposable;
+import {Subscription} from "rxjs/Subscription";
 const logger = debug('staunch:System');
 const log = (ns) => (message) => logger(`${ns}`, message);
 
@@ -106,13 +108,11 @@ export class System {
             .map(address => new ActorRef(address, this));
     }
 
-    public stop(actorRef: ActorRef): void {
-        Observable
-            .concat(
-                this.tell({address: actorRef.address, payload: 'stop'}),
-                this.stopActor(actorRef)
-            )
-            .subscribe();
+    public stop(actorRef: ActorRef): Subscription {
+        return Observable.concat(
+            this.tell({address: actorRef.address, payload: 'stop'}),
+            this.stopActor(actorRef)
+        ).subscribe();
     }
 
     private stopActor(actorRef: ActorRef): Observable<any> {
@@ -140,6 +140,7 @@ export class System {
         const bound = this.actorOf.bind(this);
         const boundSelection = this.actorSelection.bind(this);
         const boundStop = this.stop.bind(this);
+        const gracefulStop = this.gracefulStop.bind(this);
 
         return {
             actorOf(factory, localAddress?) {
@@ -152,9 +153,8 @@ export class System {
             actorSelection(search) {
                 return boundSelection(search, parentAddress);
             },
-            stop(actorRef: ActorRef) {
-                return boundStop(actorRef);
-            }
+            stop: boundStop,
+            gracefulStop: gracefulStop
         }
     }
 
@@ -200,5 +200,19 @@ export class System {
         }
 
         return path;
+    }
+
+    private _gracefulStop(actorRef: ActorRef): Observable<any> {
+        return Observable.concat(
+            this.ask({address: actorRef.address, payload: 'stop'}),
+            this.stopActor(actorRef)
+        );
+    }
+
+    public gracefulStop(actorRefs: ActorRef|ActorRef[]): Observable<any> {
+        const refs = [].concat(actorRefs).filter(Boolean);
+        return Observable
+            .concat(...refs.map(x => this._gracefulStop(x)))
+            .toArray();
     }
 }
