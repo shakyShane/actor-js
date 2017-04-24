@@ -4,31 +4,72 @@ const { createSystem } = require('../');
 const { TestScheduler } = require('rxjs');
 const { SystemActor } = require('../dist/SystemActor');
 
-it.only('can stop actors with an actorRef', function () {
+it('can stop actors from system level', function () {
     const scheduler = new TestScheduler();
     const system = createSystem({
         messageScheduler: scheduler
     });
-    const child = function (address, context) {
+    let calls = 0;
+    const Guardian = function (address, context) {
         return {
             receive(payload) {
-                console.log('payload', payload);
+                calls++;
+                assert.equal(payload, 'stop');
+            },
+            postStop() {
+                calls++;
+            }
+        }
+    };
+
+    const actorRef = system.actorOf(Guardian, 'guardian-01');
+    system.stop(actorRef);
+    scheduler.flush();
+    assert.equal(calls, 2);
+});
+
+it('can stop actors from actor level', function () {
+    const scheduler = new TestScheduler();
+    const system = createSystem({
+        messageScheduler: scheduler
+    });
+    let calls = [];
+    const Child = function () {
+        return {
+            receive(payload) {
+                calls.push(`child receive ${payload}`);
+            },
+            postStop() {
+                calls.push('child postStop');
             }
         }
     };
     const Guardian = function (address, context) {
-        const actors = [];
+        const actorRefs = [];
         return {
             postStart() {
-                actors.push(context.actorOf(child, 'TTT'));
-                context.stop(actors[0]);
+                calls.push('Guardian postStart');
+                actorRefs.push(context.actorOf(Child))
             },
-            receive() {
-
+            receive(payload) {
+                switch(payload) {
+                    case 'interrupt-child':
+                        actorRefs.forEach((actor) => {
+                            context.stop(actor);
+                        });
+                }
             }
         }
     };
 
-    system.actorOf(Guardian, 'guardian-01');
+    const guardianRef = system.actorOf(Guardian, 'guardian-01');
+    guardianRef.tell('interrupt-child').subscribe();
     scheduler.flush();
+    // console.log(system.actorRegister.getValue())
+    // console.log(calls);
+    assert.deepEqual(calls, [
+        'Guardian postStart',
+        'child receive stop',
+        'child postStop',
+    ]);
 });

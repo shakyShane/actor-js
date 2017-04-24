@@ -17,6 +17,7 @@ const logger = debug('staunch:System');
 const log = (ns) => (message) => logger(`${ns}`, message);
 
 export type Effect = (payload: any, message: IncomingMessage) => Observable<any>;
+export type SystemMessages = 'stop';
 
 export class System {
 
@@ -105,6 +106,32 @@ export class System {
             .map(address => new ActorRef(address, this));
     }
 
+    public stop(actorRef: ActorRef): void {
+        Observable
+            .concat(
+                this.tell({address: actorRef.address, payload: 'stop'}),
+                this.stopActor(actorRef)
+            )
+            .subscribe();
+    }
+
+    private stopActor(actorRef) {
+        return Observable.create(observer => {
+            const reg = this.actorRegister.getValue();
+            const selectedActor = reg[actorRef.address];
+            if (selectedActor) {
+                if (selectedActor.postStop) {
+                    selectedActor.postStop();
+                    observer.complete();
+                } else {
+                    observer.complete();
+                }
+            } else {
+                observer.complete();
+            }
+        });
+    }
+
     private createActor(factory, address: string, context: IActorContext): IActor {
         return new factory(address, context);
     }
@@ -112,6 +139,7 @@ export class System {
     private createContext(parentAddress: string): IActorContext {
         const bound = this.actorOf.bind(this);
         const boundSelection = this.actorSelection.bind(this);
+        const boundStop = this.stop.bind(this);
 
         return {
             actorOf(factory, localAddress?) {
@@ -123,6 +151,9 @@ export class System {
             },
             actorSelection(search) {
                 return boundSelection(search, parentAddress);
+            },
+            stop(actorRef: ActorRef) {
+                return boundStop(actorRef);
             }
         }
     }
