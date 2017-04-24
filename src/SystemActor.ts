@@ -1,13 +1,13 @@
 import {IActorContext} from "./ActorContext";
 
-export interface ActorFactory {
+export interface IActorFactory {
     mailboxType: string;
     address: string;
     context: IActorContext;
     receive(payload: any, message: IncomingMessage): any
 }
 
-export class BaseActorFactory implements ActorFactory {
+export class BaseActorFactory implements IActorFactory {
     public mailboxType = 'default';
     constructor(public address: string, public context: IActorContext) {
         return this;

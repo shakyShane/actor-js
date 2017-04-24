@@ -8,7 +8,7 @@ even in single-threaded programming environments such as Javascript.
 ### IActor system `ActorSystem`
 
 - [x] `createSystem()`
-- [x] `system.actorOf(factory)` -> `system.actorOf(factory)`
+- [x] `system.actorOf(IActorFactory) -> ActorRef` 
 
 ### Actors `IActor`
 
@@ -17,11 +17,10 @@ even in single-threaded programming environments such as Javascript.
 - [ ] `actor.kill()` - send a message instructing the actor to terminate
 
 ### IActor context `ActorContext`
-- [ ] `context.stopSelf()` - allow an actor to stop itself
-- [ ] `context.stopChild(childRef)` - allow an actor to tear down a child
-- [x] `context.actorOf(childRef)` - allow an actor to create more actors
+- [ ] `context.stop(IActorRef)` - allow an actor to be stopped via a ref
+- [x] `context.actorOf(IActorFactory)` - allow an actor to create more actors
 - [ ] `context.become(newHandler)` - designate a new handler for future messages [http://doc.akka.io/docs/akka/current/scala/actors.html#Graceful_Stop](http://doc.akka.io/docs/akka/current/scala/actors.html#Graceful_Stop)
-- [x] `context.actorSelection(lookup)` - allow actor lookups via paths, such as `/system` `/deadletter` etc
+- [x] `context.actorSelection(lookup: string)` - allow actor lookups via paths, such as `/system` `/deadletter` etc
 
 ### IActor receive method
 - [x] `receive(payload, message, sender)`

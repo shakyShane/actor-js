@@ -6,14 +6,14 @@ import debug = require('debug');
 import {System} from "./System";
 import {Observable} from "rxjs/Observable";
 import {IScheduler} from "rxjs/Scheduler";
-import {ActorFactory, SystemActor} from "./SystemActor";
+import {IActorFactory, SystemActor} from "./SystemActor";
 const logger = debug('staunch');
 
 const log = (ns) => (message) => logger(`${ns}`, message);
 
 export interface ICreateOptions {
     messageScheduler?: IScheduler
-    factory?: ActorFactory
+    factory?: IActorFactory
 }
 
 export function createSystem(opts: ICreateOptions = {}): System {
