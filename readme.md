@@ -51,7 +51,8 @@ even in single-threaded programming environments such as Javascript.
     - [ ] postRestart called on old instance
     
 - `Stop`, `context.stop()` or `PoisonPill`
-    - [ ] postStop is called on instance
+    - [x] postStop is called on instance
+    - [ ] actor is removed from the internal system register
     - [ ] `Terminated` is sent to watchers
     - [ ] path is free to be used again
     
