@@ -21,7 +21,7 @@ even in single-threaded programming environments such as Javascript.
 - [ ] `context.stopChild(childRef)` - allow an actor to tear down a child
 - [x] `context.actorOf(childRef)` - allow an actor to create more actors
 - [ ] `context.become(newHandler)` - designate a new handler for future messages [http://doc.akka.io/docs/akka/current/scala/actors.html#Graceful_Stop](http://doc.akka.io/docs/akka/current/scala/actors.html#Graceful_Stop)
-- [ ] `context.actorSelector(lookup)` - allow actor lookups via paths, such as `/system` `/deadletter` etc
+- [x] `context.actorSelection(lookup)` - allow actor lookups via paths, such as `/system` `/deadletter` etc
 
 ### IActor receive method
 - [x] `receive(payload, message, sender)`
