@@ -2,6 +2,10 @@
 # yarn lockfile v1
 
 
+"@types/node@7":
+  version "7.0.13"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-7.0.13.tgz#1b0a53fe9ef9c3a5d061b126cc9b915bca43a3f5"
+
 "@types/rx-core-binding@*":
   version "4.0.3"
   resolved "https://registry.yarnpkg.com/@types/rx-core-binding/-/rx-core-binding-4.0.3.tgz#74261d1df5ab9eafa697ed9e8243999787cc87ae"
