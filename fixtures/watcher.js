@@ -1,28 +1,35 @@
 const Rx = require('rxjs');
 const { empty, of } = Rx.Observable;
 const Immutable = require('immutable');
-
-const Option = Immutable.Record({
-    dir: '',
-});
-
-function createFromString(input) {
-    return new Option({dir: input});
-}
+const chokidar  = require('chokidar');
 
 module.exports.create = function (config, context) {
-    let count = 0;
+    let watcher;
     return {
-        name: 'FileWatcher',
-        receive: function(payload, message, sender) {
-            switch (payload) {
-                case 'ping':
-                    sender.reply(`pong ${count += 1}`);
-                    break;
-                case 'kill':
-                    context.shutdown();
+        receive: function(action, message, sender) {
+            console.log('child-->', action);
+            if (action === 'stop') {
+                if (watcher) {
+                    watcher.close();
+                }
+                return sender.reply('ACK');
             }
-            // sender.reply('pong');
+            switch (action.type) {
+                case 'init': {
+                    const patterns = action.payload;
+                    watcher = chokidar.watch(patterns, {atomic: true})
+                        .on('all', function (event, path) {
+                            // console.log('CHOK^^ event', event, path);
+                        });
+                    watcher.on('ready', function () {
+                        console.log(`+ watcher ready for ${patterns}`);
+                        sender.reply('k');
+                    });
+                    break;
+                }
+            }
+        },
+        postStop() {
         }
     }
 };

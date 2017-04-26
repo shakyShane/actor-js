@@ -111,14 +111,6 @@ export class System {
             .map(address => new ActorRef(address, this));
     }
 
-    public stop(actorRef: ActorRef): Subscription {
-        return Observable.concat(
-            this.tell({address: actorRef.address, payload: 'stop'}),
-            this.stopActor(actorRef),
-            this.removeActor(actorRef)
-        ).subscribe();
-    }
-
     private stopActor(actorRef: ActorRef): Observable<any> {
         const self = this;
         return Observable.create(observer => {
@@ -210,7 +202,7 @@ export class System {
         return path;
     }
 
-    private _gracefulStop(actorRef: ActorRef): Observable<any> {
+    private createGracefulStopSequence(actorRef: ActorRef): Observable<any> {
         return Observable.concat(
             this.ask({address: actorRef.address, payload: 'stop'}),
                 // .do(x => console.log('graceful stop OK', actorRef.address)),
@@ -219,11 +211,19 @@ export class System {
         );
     }
 
+    public stop(actorRef: ActorRef): Subscription {
+        return Observable.concat(
+            this.tell({address: actorRef.address, payload: 'stop'}),
+            this.stopActor(actorRef),
+            this.removeActor(actorRef)
+        ).subscribe();
+    }
+
     public gracefulStop(actorRefs: ActorRef|ActorRef[]): Observable<any> {
         const refs = [].concat(actorRefs).filter(Boolean);
         // console.log(refs);
         return Observable
-            .concat(...refs.map(x => this._gracefulStop(x)))
+            .concat(...refs.map(x => this.createGracefulStopSequence(x)))
             .toArray();
     }
 }

@@ -7,6 +7,7 @@
     "browserify": "^14.1.0",
     "browserify-shim": "3.8.13",
     "chai": "^3.5.0",
+    "chokidar": "^1.6.1",
     "connect": "^3.6.0",
     "exorcist": "^0.4.0",
     "hyperx": "^2.3.0",
