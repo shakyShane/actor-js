@@ -129,7 +129,7 @@ it('can stop a system level actor + its children', function () {
     });
 });
 
-it('can stop a actors gracefully', function () {
+it('can stop actors gracefully', function () {
     const scheduler = new TestScheduler();
     const system = createSystem({
         messageScheduler: scheduler
@@ -169,8 +169,7 @@ it('can stop a actors gracefully', function () {
 
     const guardianRef = system.actorOf(Guardian, 'guardian-01');
 
-    system.gracefulStop(guardianRef)
-        .subscribe();
+    system.gracefulStop(guardianRef).subscribe();
 
     scheduler.flush();
 
@@ -181,4 +180,31 @@ it('can stop a actors gracefully', function () {
         'child postStop',
         'Guardian poststop'
     ]);
+});
+
+it('removes a stopped actor from the register', function () {
+    const scheduler = new TestScheduler();
+    const system = createSystem({
+        messageScheduler: scheduler
+    });
+    let calls = [];
+    const Guardian = function (address, context) {
+        return {
+            receive(payload, message, sender) {
+                calls.push(`Guardian receive ${payload}`);
+            },
+            postStop() {
+                calls.push('Guardian poststop');
+            }
+        }
+    };
+
+    const guardianRef = system.actorOf(Guardian, 'guardian-01');
+
+    system.stop(guardianRef);
+
+    scheduler.flush();
+
+    assert.deepEqual(calls, [ 'Guardian receive stop', 'Guardian poststop' ]);
+    assert.equal(system.actorSelection('guardian-01').length, 0);
 });

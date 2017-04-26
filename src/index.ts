@@ -1,4 +1,4 @@
-import {IActor, createActor} from './createActor';
+import {Actor, createActor} from './createActor';
 import {createStateActor} from './createStateActor';
 import getMailbox from "./getMailbox";
 import uuid = require('uuid/v4');
@@ -7,6 +7,7 @@ import {System} from "./System";
 import {Observable} from "rxjs/Observable";
 import {IScheduler} from "rxjs/Scheduler";
 import {IActorFactory, SystemActor} from "./SystemActor";
+import {IActorRegister, addActor, removeActor} from "./ActorRegister";
 const logger = debug('staunch');
 
 const log = (ns) => (message) => logger(`${ns}`, message);
@@ -16,16 +17,30 @@ export interface ICreateOptions {
     factory?: IActorFactory
 }
 
+type RegisterFn = (register: {[index: string]: Actor}, IActor) => {[index: string]: Actor};
+
+
 export function createSystem(opts: ICreateOptions = {}): System {
 
     const system = new System(opts);
 
     // Create a global actorRegister containing actors by address
-    system.incomingActors
-        .scan(function (acc, item) {
-            acc[item.address] = item;
-            return acc;
-        }, <IActor>{}).subscribe(system.actorRegister);
+
+    Observable.merge(
+        system.incomingActors.map((incoming) => ({
+            actor: incoming,
+            fn: addActor as RegisterFn
+        })),
+        system.outgoingActors.map((incoming) => ({
+            actor: incoming,
+            fn: removeActor as RegisterFn
+        })),
+    )
+        .scan(function (acc, {actor, fn}) {
+            return fn(acc, actor);
+        }, {} as IActorRegister)
+        // .do(x => console.log(x))
+        .subscribe(system.actorRegister);
 
     // for incoming actors, create a mailbox for each
     const actorsWithMailboxes = system.incomingActors
@@ -40,7 +55,7 @@ export function createSystem(opts: ICreateOptions = {}): System {
     actorsWithMailboxes.scan((acc, { actor, mailbox }) => {
         acc[actor.address] = mailbox;
         return acc;
-    }, <IActor>{}).subscribe(system.mailboxes);
+    }, <Actor>{}).subscribe(system.mailboxes);
 
     // for each registered mailbox, subscribe to
     // it's outgoing messages and pump the output

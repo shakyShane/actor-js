@@ -1,4 +1,4 @@
-import {IActor, StateActor} from "./createActor";
+import {Actor, StateActor} from "./createActor";
 import {Observable} from 'rxjs/Observable';
 import './rx';
 
@@ -24,7 +24,8 @@ export type SystemMessages = 'stop';
 export class System {
 
     public actorRegister: BehaviorSubject<any>;
-    public incomingActors: Subject<IActor|StateActor>;
+    public incomingActors: Subject<Actor|StateActor>;
+    public outgoingActors: Subject<ActorRef>;
     public responses: Subject<MessageResponse>;
     public mailboxes: BehaviorSubject<any>;
     public arbiter: Subject<IncomingMessage>;
@@ -36,7 +37,9 @@ export class System {
         // global actorRegister of available actors
         this.actorRegister  = new BehaviorSubject({});
         // stream for actors to actorRegister upon
-        this.incomingActors = new Subject<IActor|StateActor>();
+        this.incomingActors = new Subject<Actor|StateActor>();
+        // stream of actors to be removed from the register
+        this.outgoingActors = new Subject<ActorRef>();
         // responses stream where actors can 'reply' via an messageID
         this.responses      = new Subject<MessageResponse>();
         // an object containing all mailboxes
@@ -111,28 +114,33 @@ export class System {
     public stop(actorRef: ActorRef): Subscription {
         return Observable.concat(
             this.tell({address: actorRef.address, payload: 'stop'}),
-            this.stopActor(actorRef)
+            this.stopActor(actorRef),
+            this.removeActor(actorRef)
         ).subscribe();
     }
 
     private stopActor(actorRef: ActorRef): Observable<any> {
+        const self = this;
         return Observable.create(observer => {
-            const reg = this.actorRegister.getValue();
+            const reg = self.actorRegister.getValue();
             const selectedActor = reg[actorRef.address];
             if (selectedActor) {
+                // console.log('private stopActor CREATE', Object.keys(reg));
                 if (selectedActor.postStop) {
                     selectedActor.postStop();
-                    observer.complete();
-                } else {
-                    observer.complete();
                 }
-            } else {
-                observer.complete();
             }
+            observer.complete();
         });
     }
 
-    private createActor(factory, address: string, context: IActorContext): IActor {
+    private removeActor(actorRef: ActorRef): Observable<any> {
+        return Observable
+            .of(true, this.messageScheduler)
+            .do(x => this.outgoingActors.next(actorRef))
+    }
+
+    private createActor(factory, address: string, context: IActorContext): Actor {
         return new factory(address, context);
     }
 
@@ -205,12 +213,15 @@ export class System {
     private _gracefulStop(actorRef: ActorRef): Observable<any> {
         return Observable.concat(
             this.ask({address: actorRef.address, payload: 'stop'}),
-            this.stopActor(actorRef)
+                // .do(x => console.log('graceful stop OK', actorRef.address)),
+            this.stopActor(actorRef),
+            this.removeActor(actorRef)
         );
     }
 
     public gracefulStop(actorRefs: ActorRef|ActorRef[]): Observable<any> {
         const refs = [].concat(actorRefs).filter(Boolean);
+        // console.log(refs);
         return Observable
             .concat(...refs.map(x => this._gracefulStop(x)))
             .toArray();

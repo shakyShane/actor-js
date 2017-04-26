@@ -1,4 +1,4 @@
-import {IActor} from "./createActor";
+import {Actor} from "./createActor";
 import {Mailbox} from "./getMailbox";
 import {Subject} from "rxjs/Subject";
 import {Observable} from "rxjs/Observable";
@@ -9,7 +9,7 @@ export interface MessageSenderRef {
     reply(message: any): void
 }
 
-export function createDefaultMailbox (actor: IActor, system): Mailbox {
+export function createDefaultMailbox (actor: Actor, system): Mailbox {
 
     const incomingMessages = new Subject<IncomingMessage>();
 

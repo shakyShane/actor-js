@@ -1,29 +1,29 @@
-# IActor Model in JS
+# Actor Model in JS
 
-> Exploring the potential benefits of implementing APIs in the *style* of the IActor Model, 
+> Exploring the potential benefits of implementing APIs in the *style* of the Actor Model, 
 even in single-threaded programming environments such as Javascript.
 
 ## TODO
 
-### IActor system `ActorSystem`
+### Actor system `ActorSystem`
 
 - [x] `createSystem()`
 - [x] `system.actorOf(IActorFactory) -> ActorRef` 
 
-### Actors `IActor`
+### Actors `Actor`
 
 - [x] `actor.tell()` - fire & forget message
 - [x] `actor.ask()` - ask & await async response from an actor
 - [ ] `actor.kill()` - send a message instructing the actor to terminate
 
-### IActor context `ActorContext`
+### Actor context `ActorContext`
 - [x] `context.stop(IActorRef)` - allow an actor to be stopped via a ref
 - [x] `context.gracefulStop(IActorRef)` - allow an actor to be stopped via a ref with confirmation (for sequencing etc)
 - [x] `context.actorOf(IActorFactory)` - allow an actor to create more actors
 - [ ] `context.become(newHandler)` - designate a new handler for future messages [http://doc.akka.io/docs/akka/current/scala/actors.html#Graceful_Stop](http://doc.akka.io/docs/akka/current/scala/actors.html#Graceful_Stop)
 - [x] `context.actorSelection(lookup: string)` - allow actor lookups via paths, such as `/system` `/deadletter` etc
 
-### IActor receive method
+### Actor receive method
 - [x] `receive(payload, message, sender)`
 - [x] `sender.reply()` for replying directly to a message
     ```js
@@ -37,7 +37,7 @@ even in single-threaded programming environments such as Javascript.
       |> resp console.log 'resp:' + resp
     ```
     
-### IActor Lifecycle
+### Actor Lifecycle
 
 - `actorOf(...)`
     - [x] path is reserved
@@ -52,14 +52,14 @@ even in single-threaded programming environments such as Javascript.
     
 - `Stop`, `context.stop()` or `PoisonPill`
     - [x] postStop is called on instance
-    - [ ] actor is removed from the internal system register
+    - [x] actor is removed from the internal system register
     - [ ] `Terminated` is sent to watchers
-    - [ ] path is free to be used again
+    - [x] path is free to be used again
     
 - graceful stop [http://doc.akka.io/docs/akka/current/scala/actors.html#Graceful_Stop](http://doc.akka.io/docs/akka/current/scala/actors.html#Graceful_Stop)
     - [ ] `become()` - designate a new handler for future messages
     
-### IActor References, Paths and Addresses
+### Actor References, Paths and Addresses
 
 - [x] `actorOf()` only ever creates a new actor, and it creates it as a direct child of the context 
     on which this method is invoked (which may be any actor or actor system).

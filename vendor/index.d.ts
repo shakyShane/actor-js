@@ -8,7 +8,8 @@ type TellFn = (name: string, payload: any, id?: string) => any
 interface ActorRef {
     name: string,
     ask: AskFn,
-    tell: TellFn
+    tell: TellFn,
+    address: string,
     hasAddress(name: string): boolean
     addresses: {
         methods: string[]
