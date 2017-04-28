@@ -7,7 +7,6 @@ module.exports.create = function (config, context) {
     let watcher;
     return {
         receive: function(action, message, sender) {
-            console.log('child-->', action);
             if (action === 'stop') {
                 if (watcher) {
                     watcher.close();
@@ -19,7 +18,7 @@ module.exports.create = function (config, context) {
                     const patterns = action.payload;
                     watcher = chokidar.watch(patterns, {atomic: true})
                         .on('all', function (event, path) {
-                            // console.log('CHOK^^ event', event, path);
+                            console.log('CHOK^^ event', event, path);
                         });
                     watcher.on('ready', function () {
                         console.log(`+ watcher ready for ${patterns}`);
