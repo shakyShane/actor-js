@@ -12,15 +12,30 @@ const {create: Server} = require('./fixtures/server');
 const system = createSystem();
 const clients = system.actorOf(Clients, 'clients');
 const filewatchGuardian = system.actorOf(FileWatcherGuardian, 'file-watcher');
+
 filewatchGuardian
     .ask({type: 'init', payload: ['test', 'src']})
+    .flatMap(() => {
+        return Rx.Observable
+            .timer(2000)
+            .flatMap(() => filewatchGuardian
+                .ask({type: 'init', payload: ['package.json']}))
+    })
+    .flatMap(() => {
+        return Rx.Observable
+            .timer(2000)
+            .flatMap(() => filewatchGuardian
+                .ask({type: 'init', payload: ['test']}))
+    })
     // .flatMap(() => {
     //     return Rx.Observable
     //         .timer(2000)
     //         .flatMap(() => system.gracefulStop(filewatchGuardian))
+    //         .take(1)
     // })
     .subscribe(answer => {
-        console.log('All setup!');
+        console.log('stopping');
+        // console.log('All setup and watching!');
         // system.stop()
         // console.log(system.actorRegister.getValue());
         // system.gracefulStop(filewatchGuardian).subscribe();

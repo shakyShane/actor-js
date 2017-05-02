@@ -12,47 +12,77 @@ function createFromString(input) {
     return new Option({dir: input});
 }
 
-module.exports.create = function (config, context) {
-    let children       = [];
-    let clients        = context.actorSelection('/system/clients');
-    let subject;
-    let subscription;
+module.exports.create = class {
+    constructor(address, context) {
+        this.address = address;
+        this.context = context;
+        this.subject = new Rx.Subject();
+        this.children = [];
+        this.subscription = this.subject.subscribe(x => {
+            console.log('--->', x);
+        });
+    }
+    init(payload, sender) {
 
-    return {
-        receive: function(action, message, sender) {
-            // console.log('guardian-->', action);
-            if (action === 'stop') {
-                return context.gracefulStop(children)
-                    .subscribe(resp => {
-                        console.log('~x~ Gracefully stopped children');
-                        sender.reply('Sup!');
-                    });
-            }
-            switch (action.type) {
-                case 'init': {
-                    const options = action.payload.map(createFromString);
-                    const actors = options.map(opt => ({ref: context.actorOf(FileWatcher), dir: opt.get('dir')}));
-                    children.push.apply(children, actors.map(x => x.ref));
-                    subject      = new Rx.Subject();
-                    subscription = subject
-                        .subscribe(x => {
+        const options = payload.map(createFromString);
 
-                        });
-                    return Rx.Observable
-                        .concat(...actors.map(a => a.ref.ask({type: 'init', payload: a.dir})))
-                        .toArray()
-                        .subscribe(x => {
-                            sender.reply('ACK');
-                        });
-                }
-                case 'event': {
-                    subject.next(action.payload);
-                }
-            }
-        },
-        postStop() {
-            subscription.dispose();
-            console.log('guardian: postStop()');
+        const childActors = options.map(opt => ({
+            ref: this.context.actorOf(FileWatcher),
+            dir: opt.get('dir')
+        }));
+
+        this.children = childActors.map(x => x.ref);
+
+        return Rx.Observable
+            .concat(...childActors
+                .map(actor =>
+                    actor.ref.tell({type: 'init', payload: {patterns: actor.dir}})
+                )
+            )
+            .toArray();
+    }
+    stop() {
+        return this.context.gracefulStop(this.children)
+    }
+    clearChildren() {
+        return this.context
+            .gracefulStop(this.children)
+            // .do(x => this.children = [])
+            .take(1);
+    }
+    receive(action, message, sender) {
+
+        if (action === 'stop') {
+            return this.stop().subscribe(() => sender.reply('ACK!'));
         }
+
+        switch (action.type) {
+            case 'init': {
+                // if 'init' happens but we already have children
+                // kill them and restart everything
+                if (this.children.length) {
+                    return Rx.Observable.concat(
+                        this.clearChildren(),
+                        this.init(action.payload)
+                    ).subscribe(x => sender.reply('ACK'));
+                }
+
+                return this.init(action.payload, sender)
+                    .subscribe(x => sender.reply('Initial init'));
+            }
+
+            case 'event': {
+                this.handleEvent(action.payload);
+                break;
+            }
+        }
+    }
+    handleEvent(e) {
+        console.log('got an event', e);
+    }
+    postStop() {
+        this.subscription.unsubscribe();
+        // console.log(this.children);
+        console.log('guardian: postStop()');
     }
 };
