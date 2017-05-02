@@ -5,6 +5,7 @@ import uuid = require('uuid/v4');
 import debug = require('debug');
 import {System} from "./System";
 import {Observable} from "rxjs/Observable";
+import "rxjs/add/observable/merge";
 import {IScheduler} from "rxjs/Scheduler";
 import {IActorFactory, SystemActor} from "./SystemActor";
 import {IActorRegister, addActor, removeActor} from "./ActorRegister";
