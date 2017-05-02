@@ -19,7 +19,7 @@ it.only('an actor can retrieve its own address', function () {
                 console.log('Asking for identity');
                 context.ask('identity').subscribe(x => {
                     console.log(x);
-                })
+                });
             },
             receive(payload) {
 

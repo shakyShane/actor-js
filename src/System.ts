@@ -187,7 +187,9 @@ export class System {
      */
     public tell(action: IOutgoingMessage, messageID?: string): Observable<any> {
         if (!messageID) messageID = uuid();
-        return Observable.of({action, messageID}, this.messageScheduler).do(this.arbiter);
+        return Observable.of({action, messageID}, this.messageScheduler)
+            .do(this.arbiter)
+            .take(1);
     }
 
     private createActorAddress(path: string): string {

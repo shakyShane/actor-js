@@ -5,6 +5,7 @@ const chokidar  = require('chokidar');
 
 module.exports.create = function (config, context) {
     let watcher;
+    let parent = context.actorSelection('../')[0];
     return {
         receive: function(action, message, sender) {
             if (action === 'stop') {
@@ -18,10 +19,12 @@ module.exports.create = function (config, context) {
                     const patterns = action.payload;
                     watcher = chokidar.watch(patterns, {atomic: true})
                         .on('all', function (event, path) {
-                            console.log('CHOK^^ event', event, path);
+                            if (event === 'addDir') {
+                                parent.tell({type: 'event', payload: {event, path}}).subscribe();
+                            }
                         });
                     watcher.on('ready', function () {
-                        console.log(`+ watcher ready for ${patterns}`);
+                        console.log(`+ watcher ready for pattern \`${patterns}\``);
                         sender.reply('k');
                     });
                     break;
