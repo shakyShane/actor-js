@@ -6,7 +6,7 @@ const { TestScheduler } = require('rxjs');
 const { SystemActor } = require('../dist/SystemActor');
 const { System } = require('../dist/System');
 
-it.only('an actor can retrieve its own address', function () {
+it.skip('an actor can retrieve its own address', function () {
     const scheduler = new TestScheduler();
     const system = createSystem({
         messageScheduler: scheduler
