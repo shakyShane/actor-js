@@ -20,6 +20,7 @@ even in single-threaded programming environments such as Javascript.
 - [x] `context.stop(IActorRef)` - allow an actor to be stopped via a ref
 - [x] `context.gracefulStop(IActorRef)` - allow an actor to be stopped via a ref with confirmation (for sequencing etc)
 - [x] `context.actorOf(IActorFactory)` - allow an actor to create more actors
+- [ ] `context.parent` - allow an actor to access it's parent (in order to send it messages)
 - [ ] `context.become(newHandler)` - designate a new handler for future messages [http://doc.akka.io/docs/akka/current/scala/actors.html#Graceful_Stop](http://doc.akka.io/docs/akka/current/scala/actors.html#Graceful_Stop)
 - [x] `context.actorSelection(lookup: string)` - allow actor lookups via paths, such as `/system` `/deadletter` etc
 

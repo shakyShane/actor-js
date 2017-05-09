@@ -15,7 +15,9 @@ import {IScheduler} from "rxjs/Scheduler";
 import {IActorContext} from "./ActorContext";
 import Disposable = Rx.Disposable;
 import {Subscription} from "rxjs/Subscription";
-const logger = debug('staunch:System');
+const logger = debug('acjs:System');
+const lifecycleLogger = debug('acjs:lifecycle');
+const messageLogger = debug('acjs:message');
 const log = (ns) => (message) => logger(`${ns}`, message);
 
 export type Effect = (payload: any, message: IncomingMessage) => Observable<any>;
@@ -77,12 +79,14 @@ export class System {
         }
 
         if (actor.preStart) {
+            lifecycleLogger('preStart', address);
             actor.preStart();
         }
 
         this.incomingActors.next(actor);
 
         if (actor.postStart) {
+            lifecycleLogger('postStart', address);
             actor.postStart();
         }
 
@@ -119,6 +123,7 @@ export class System {
             if (selectedActor) {
                 // console.log('private stopActor CREATE', Object.keys(reg));
                 if (selectedActor.postStop) {
+                    lifecycleLogger('postStop', actorRef.address);
                     selectedActor.postStop();
                 }
             }
@@ -170,13 +175,13 @@ export class System {
 
         const trackResponse = this.responses
             .filter(x => x.respId === messageID)
-            .do(log('ask resp <-'))
+            .do(x => messageLogger('ask resp <-', x))
             .map(x => x.response)
             .take(1);
 
         const messageSender = Observable
             .of({action, messageID}, this.messageScheduler)
-            .do(log('ask outgoing ->'))
+            .do(x => messageLogger('ask outgoing ->', x))
             .do(message => this.arbiter.next(message));
 
         return Observable.zip(trackResponse, messageSender, (resp) => resp);
