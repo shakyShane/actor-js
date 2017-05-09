@@ -6,4 +6,5 @@ export interface IActorContext {
     actorSelection(search): ActorRef[]
     gracefulStop(actorRefs: ActorRef|ActorRef[]): Observable<any>
     stop(ActorRef): void
+    parent: ActorRef
 }

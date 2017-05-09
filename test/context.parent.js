@@ -7,7 +7,7 @@ const { SystemActor } = require('../dist/SystemActor');
 const { System } = require('../dist/System');
 
 describe('context.parent', function () {
-    it.only('an actor can message its parent', function () {
+    it('an actor can message its parent', function () {
         const scheduler = new TestScheduler();
         const system = createSystem({
             messageScheduler: scheduler
@@ -20,23 +20,31 @@ describe('context.parent', function () {
                 this.children = [];
             }
             postStart() {
+                calls.push('Parent postStart()');
                 const child = this.context.actorOf(Child);
                 this.children.push(child);
             }
             receive(payload) {
                 calls.push(payload);
             }
-        }
+        };
         const Child = function(address, context) {
             return {
                 postStart() {
+                    calls.push('Child postStart()');
                     context.parent.tell('Child started!').subscribe();
                 },
                 receive() {
                     console.log('msg');
                 }
             }
-        }
+        };
         const parentActor = system.actorOf(Parent, 'p');
+        scheduler.flush();
+        assert.deepEqual(calls, [
+            'Parent postStart()',
+            'Child postStart()',
+            'Child started!'
+        ]);
     });
 });

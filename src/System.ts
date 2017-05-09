@@ -146,16 +146,18 @@ export class System {
         const boundSelection = this.actorSelection.bind(this);
         const boundStop = this.stop.bind(this);
         const gracefulStop = this.gracefulStop.bind(this);
+        const parentRef = this.getParentRef(parentAddress);
 
         return {
-            actorOf(factory, localAddress?) {
+            parent: parentRef,
+            actorOf(factory, localAddress?): ActorRef {
                 const prefix = parentAddress;
                 if (!localAddress) {
                     localAddress = uuid();
                 }
                 return bound(factory, [prefix, localAddress].join('/'));
             },
-            actorSelection(search) {
+            actorSelection(search): ActorRef[] {
                 return boundSelection(search, parentAddress);
             },
             stop: boundStop,
@@ -207,6 +209,11 @@ export class System {
         }
 
         return path;
+    }
+
+    private getParentRef (address): ActorRef {
+        const parentAddress = address.split('/').slice(0, -1);
+        return new ActorRef(parentAddress.join('/'), this);
     }
 
     private createGracefulStopSequence(actorRef: ActorRef): Observable<any> {
