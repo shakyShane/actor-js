@@ -27,12 +27,11 @@ filewatchGuardian
             .flatMap(() => filewatchGuardian
                 .ask({type: 'init', payload: ['test']}))
     })
-    // .flatMap(() => {
-    //     return Rx.Observable
-    //         .timer(2000)
-    //         .flatMap(() => system.gracefulStop(filewatchGuardian))
-    //         .take(1)
-    // })
+    .flatMap(() => {
+        return Rx.Observable
+            .timer(2000)
+            .flatMap(() => system.gracefulStop(filewatchGuardian));
+    })
     .subscribe(answer => {
         console.log('stopping');
         // console.log('All setup and watching!');
