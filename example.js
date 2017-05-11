@@ -10,33 +10,58 @@ const {create: ServeStatic} = require('./fixtures/serveStatic');
 const {create: Server} = require('./fixtures/server');
 
 const system = createSystem();
-const clients = system.actorOf(Clients, 'clients');
-const filewatchGuardian = system.actorOf(FileWatcherGuardian, 'file-watcher');
 
-filewatchGuardian
-    .ask({type: 'init', payload: ['test', 'src']})
-    .flatMap(() => {
-        return Rx.Observable
-            .timer(2000)
-            .flatMap(() => filewatchGuardian
-                .ask({type: 'init', payload: ['package.json']}))
-    })
-    .flatMap(() => {
-        return Rx.Observable
-            .timer(2000)
-            .flatMap(() => filewatchGuardian
-                .ask({type: 'init', payload: ['test']}))
-    })
-    .flatMap(() => {
-        return Rx.Observable
-            .timer(2000)
-            .flatMap(() => system.gracefulStop(filewatchGuardian));
-    })
-    .subscribe(answer => {
-        console.log('stopping');
-        // console.log('All setup and watching!');
-        // system.stop()
-        // console.log(system.actorRegister.getValue());
-        // system.gracefulStop(filewatchGuardian).subscribe();
-    });
-// console.log(filewatchGuardian);
+let calls = [];
+let instanceCount = 0;
+const Child = function (address, context) {
+    instanceCount++;
+    return {
+        preRestart() {
+            calls.push(['preRestart', instanceCount]);
+        },
+        postRestart() {
+            calls.push(['postRestart', instanceCount]);
+        },
+        receive(payload) {
+            if (payload === 'error1') {
+                throw new Error('Something went wrong');
+            }
+            if (payload === 'error2') {
+                throw new Error('Something went wrong');
+            }
+            if (payload === 'other') {
+                console.log('ryu');
+            }
+        }
+    }
+};
+
+const Guardian = function (address, context) {
+    let children = [];
+    return {
+        postStart() {
+            children.push(context.actorOf(Child, 'c'));
+        },
+        receive(payload, message, sender) {
+            children[0]
+                .ask('error1')
+                .catch(err => {
+                    console.log('Nope');
+                })
+                .subscribe(x => console.log('do I get here'))
+
+            //     .subscribe(() => {
+            //         setTimeout(() => {
+            //             context.actorSelection('**')[0]
+            //                 .ask('error2')
+            //                 .subscribe(x => sender.reply('ACK'));
+            //         }, 1000);
+            //     });
+        }
+    }
+};
+
+const actorRef = system.actorOf(Guardian, 'guardian-01');
+actorRef.ask('go').subscribe(x => {
+    console.log('calls');
+});

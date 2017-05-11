@@ -26,7 +26,7 @@ export type SystemMessages = 'stop';
 export class System {
 
     public actorRegister: BehaviorSubject<any>;
-    public incomingActors: Subject<Actor|StateActor>;
+    public incomingActors: Subject<Actor>;
     public outgoingActors: Subject<ActorRef>;
     public responses: Subject<MessageResponse>;
     public mailboxes: BehaviorSubject<any>;
@@ -39,7 +39,7 @@ export class System {
         // global actorRegister of available actors
         this.actorRegister  = new BehaviorSubject({});
         // stream for actors to actorRegister upon
-        this.incomingActors = new Subject<Actor|StateActor>();
+        this.incomingActors = new Subject<Actor>();
         // stream of actors to be removed from the register
         this.outgoingActors = new Subject<ActorRef>();
         // responses stream where actors can 'reply' via an messageID
@@ -74,6 +74,8 @@ export class System {
             }
         }
 
+        actor._factoryMethod = actorFactory;
+
         if (!actor.address) {
             actor.address = actorAddress;
         }
@@ -91,6 +93,23 @@ export class System {
         }
 
         return new ActorRef(actor.address, this);
+    }
+
+    public reincarnate(actor: Actor): Observable<any> {
+        const { address, _factoryMethod } = actor;
+        return Observable.create(observer => {
+            const context  = this.createContext(address);
+            const newActor = this.createActor(_factoryMethod, address, context);
+            if (!newActor.address) {
+                newActor.address = address;
+            }
+            if (newActor.postRestart) {
+                lifecycleLogger('postRestart', address);
+                newActor.postRestart();
+            }
+            this.incomingActors.next(newActor);
+            observer.complete();
+        });
     }
 
     public actorSelection(search, prefix?: string): ActorRef[] {
@@ -131,10 +150,23 @@ export class System {
         });
     }
 
-    private removeActor(actorRef: ActorRef): Observable<any> {
+    public restartActor(actor: Actor): Observable<any> {
+        const self = this;
+        return Observable.create(observer => {
+            // console.log('private stopActor CREATE', Object.keys(reg));
+            if (actor.preRestart) {
+                lifecycleLogger('preRestart', actor.address);
+                actor.preRestart();
+            }
+            observer.complete();
+        });
+    }
+
+    public removeActor(actorRef: ActorRef): Observable<any> {
         return Observable
             .of(true, this.messageScheduler)
             .do(x => this.outgoingActors.next(actorRef))
+            .take(1)
     }
 
     private createActor(factory, address: string, context: IActorContext): Actor {

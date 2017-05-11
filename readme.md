@@ -47,10 +47,10 @@ even in single-threaded programming environments such as Javascript.
     - [x] actor instance is created
     - [x] preStart is called on instance
     
-- Incarnation
+- Incarnation (restarting)
+    - [ ] preRestart called on old instance
     - [ ] new instance replaces old
     - [ ] postRestart called on new instance
-    - [ ] postRestart called on old instance
     
 - `Stop`, `context.stop()` or `PoisonPill`
     - [x] postStop is called on instance

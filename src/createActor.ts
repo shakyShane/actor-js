@@ -12,9 +12,12 @@ export interface Actor {
     receive(payload, message, sender): void;
     postStart?(): void;
     preStart?(): void;
+    preRestart?(): void;
+    postRestart?(): void;
     address: string;
     mailboxType: MailboxType
     methods?: {[methodName: string]: Method}
+    _factoryMethod?: any
 }
 
 export interface IncomingActor {

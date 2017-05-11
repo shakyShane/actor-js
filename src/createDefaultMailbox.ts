@@ -31,8 +31,11 @@ export function createDefaultMailbox (actor: Actor, system): Mailbox {
                     }
                 } as MessageSenderRef;
 
-                actor.receive(payload, incomingMessage, sender);
-
+                try {
+                    actor.receive(payload, incomingMessage, sender);
+                } catch(err) {
+                    obs.error(err);
+                }
             })
                 .take(1)
                 .map(output => {

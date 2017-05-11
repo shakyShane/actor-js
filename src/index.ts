@@ -9,6 +9,7 @@ import "rxjs/add/observable/merge";
 import {IScheduler} from "rxjs/Scheduler";
 import {IActorFactory, SystemActor} from "./SystemActor";
 import {IActorRegister, addActor, removeActor} from "./ActorRegister";
+import {ActorRef} from "./ActorRef";
 const logger = debug('staunch');
 
 const log = (ns) => (message) => logger(`${ns}`, message);
@@ -62,7 +63,14 @@ export function createSystem(opts: ICreateOptions = {}): System {
     // it's outgoing messages and pump the output
     // into the 'responses' stream
     actorsWithMailboxes.flatMap(x => {
-        return x.mailbox.outgoing;
+        return x.mailbox.outgoing
+            .catch(err => {
+                return Observable.concat(
+                    system.restartActor(x.actor),
+                    system.removeActor(new ActorRef(x.actor.address, system)),
+                    system.reincarnate(x.actor)
+                ).ignoreElements();
+            });
     }).subscribe(x => system.responses.next(x as any));
 
     // the arbiter takes all incoming messages throughout
