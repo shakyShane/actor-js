@@ -33,11 +33,13 @@ export function createDefaultMailbox (actor: Actor, system): Mailbox {
 
                 actor.receive(payload, incomingMessage, sender);
 
-            }).map(output => {
-                return {
-                    response: output,
-                    respId: incomingMessage.messageID
-                }
+            })
+                .take(1)
+                .map(output => {
+                    return {
+                        response: output,
+                        respId: incomingMessage.messageID
+                    }
             });
 
         }).share();

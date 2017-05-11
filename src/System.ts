@@ -147,8 +147,10 @@ export class System {
         const boundStop = this.stop.bind(this);
         const gracefulStop = this.gracefulStop.bind(this);
         const parentRef = this.getParentRef(parentAddress);
+        const self = new ActorRef(parentAddress, this);
 
         return {
+            self,
             parent: parentRef,
             actorOf(factory, localAddress?): ActorRef {
                 const prefix = parentAddress;
