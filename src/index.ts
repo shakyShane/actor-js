@@ -63,14 +63,19 @@ export function createSystem(opts: ICreateOptions = {}): System {
     // it's outgoing messages and pump the output
     // into the 'responses' stream
     actorsWithMailboxes.flatMap(x => {
-        return x.mailbox.outgoing
-            .catch(err => {
-                return Observable.concat(
-                    system.restartActor(x.actor),
-                    system.removeActor(new ActorRef(x.actor.address, system)),
-                    system.reincarnate(x.actor)
-                ).ignoreElements();
-            });
+        return x.mailbox
+            .outgoing
+            .do((incoming: MessageResponse) => {
+                if (incoming.errors.length) {
+                    const address = x.actor.address;
+                    const factory = x.actor._factoryMethod;
+                    return Observable.concat(
+                        system.restartActor(x.actor),
+                        system.removeActor(new ActorRef(x.actor.address, system)),
+                        system.reincarnate(address, factory)
+                    ).subscribe();
+                }
+            })
     }).subscribe(x => system.responses.next(x as any));
 
     // the arbiter takes all incoming messages throughout

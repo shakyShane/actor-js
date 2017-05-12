@@ -21,9 +21,12 @@ interface IncomingMessage {
 interface IOutgoingMessage {
     address: string,
     payload?: any
+    error?: boolean
+
 }
 
 interface MessageResponse {
+    errors: Error[]
     response: any
     respId: string
 }

@@ -17,34 +17,27 @@ export function createDefaultMailbox (actor: Actor, system): Mailbox {
         .flatMap((incomingMessage: IncomingMessage) => {
 
             const { address, payload } = incomingMessage.action;
+            const respId = incomingMessage.messageID;
 
             if (typeof actor.receive !== 'function') {
                 return Observable.throw(new Error(`'Actors[default] must implement a receive() method`));
             }
 
-            return Observable.create((obs: Observer<IOutgoingMessage>) => {
+            return Observable.create((obs: Observer<MessageResponse>) => {
 
                 const sender = {
                     id: incomingMessage.messageID,
-                    reply: (message: IOutgoingMessage) => {
-                        obs.next(message);
+                    reply: (response: any) => {
+                        obs.next({errors: [], response, respId});
                     }
                 } as MessageSenderRef;
 
                 try {
                     actor.receive(payload, incomingMessage, sender);
                 } catch(err) {
-                    obs.error(err);
+                    obs.next({errors: [err], response: null, respId});
                 }
-            })
-                .take(1)
-                .map(output => {
-                    return {
-                        response: output,
-                        respId: incomingMessage.messageID
-                    }
-            });
-
+            }).take(1);
         }).share();
 
     return {

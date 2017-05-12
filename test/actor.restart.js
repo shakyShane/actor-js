@@ -6,7 +6,7 @@ const { TestScheduler } = require('rxjs');
 const { SystemActor } = require('../dist/SystemActor');
 const { System } = require('../dist/System');
 
-it.only('an actor can recover from a termination', function () {
+it('an actor can recover from a termination', function () {
     const scheduler = new TestScheduler();
     const system = createSystem({
         messageScheduler: scheduler
@@ -22,7 +22,7 @@ it.only('an actor can recover from a termination', function () {
             postRestart() {
                 calls.push(['postRestart', instanceCount]);
             },
-            receive(payload) {
+            receive(payload, message, sender) {
                 if (payload === 'error1') {
                     throw new Error('Something went wrong');
                 }
@@ -39,7 +39,8 @@ it.only('an actor can recover from a termination', function () {
             postStart() {
                 children.push(context.actorOf(Child, 'c'));
                 Rx.Observable.concat(
-                    children[0].tell('error1')
+                    children[0].ask('error1'),
+                    children[0].ask('error2')
                 ).subscribe();
             },
             receive(payload) {
@@ -50,5 +51,4 @@ it.only('an actor can recover from a termination', function () {
 
     const actorRef = system.actorOf(Guardian, 'guardian-01');
     scheduler.flush();
-    console.log(calls);
 });

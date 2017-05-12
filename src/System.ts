@@ -64,7 +64,12 @@ export class System {
         const actorAddress = this.createActorAddress(address);
         const context      = this.createContext(actorAddress);
         const actor        = this.createActor(actorFactory, actorAddress, context);
+        const decorated    = this.decorateActor(actor, actorAddress, actorFactory);
 
+        return this.initActor(decorated, context, actorAddress, actorFactory);
+    }
+
+    public decorateActor(actor, address, factory) {
         if (!actor.mailboxType) {
             actor.mailboxType = 'default';
         } else {
@@ -74,11 +79,16 @@ export class System {
             }
         }
 
-        actor._factoryMethod = actorFactory;
+        actor._factoryMethod = factory;
 
         if (!actor.address) {
-            actor.address = actorAddress;
+            actor.address = address;
         }
+
+        return actor;
+    }
+
+    public initActor(actor, context, address, factory): ActorRef {
 
         if (actor.preStart) {
             lifecycleLogger('preStart', address);
@@ -95,19 +105,17 @@ export class System {
         return new ActorRef(actor.address, this);
     }
 
-    public reincarnate(actor: Actor): Observable<any> {
-        const { address, _factoryMethod } = actor;
+    public reincarnate(address, _factoryMethod): Observable<any> {
         return Observable.create(observer => {
-            const context  = this.createContext(address);
-            const newActor = this.createActor(_factoryMethod, address, context);
-            if (!newActor.address) {
-                newActor.address = address;
-            }
-            if (newActor.postRestart) {
+            const context   = this.createContext(address);
+            const newActor  = this.createActor(_factoryMethod, address, context);
+            const decorated = this.decorateActor(newActor, address, _factoryMethod);
+
+            if (decorated.postRestart) {
                 lifecycleLogger('postRestart', address);
-                newActor.postRestart();
+                decorated.postRestart();
             }
-            this.incomingActors.next(newActor);
+            this.incomingActors.next(decorated);
             observer.complete();
         });
     }
@@ -212,7 +220,12 @@ export class System {
         const trackResponse = this.responses
             .filter(x => x.respId === messageID)
             .do(x => messageLogger('ask resp <-', x))
-            .map(x => x.response)
+            .flatMap((incoming: MessageResponse) => {
+                if (incoming.errors.length) {
+                    return Observable.throw(incoming.errors[0])
+                }
+                return Observable.of(incoming.response);
+            })
             .take(1);
 
         const messageSender = Observable
@@ -220,7 +233,7 @@ export class System {
             .do(x => messageLogger('ask outgoing ->', x))
             .do(message => this.arbiter.next(message));
 
-        return Observable.zip(trackResponse, messageSender, (resp) => resp);
+        return Observable.zip(trackResponse, messageSender, (resp) => resp)
     }
 
     /**

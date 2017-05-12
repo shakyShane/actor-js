@@ -17,9 +17,11 @@ const Child = function (address, context) {
     instanceCount++;
     return {
         preRestart() {
+            console.log('preRestart');
             calls.push(['preRestart', instanceCount]);
         },
         postRestart() {
+            console.log('postRestart');
             calls.push(['postRestart', instanceCount]);
         },
         receive(payload) {
@@ -45,10 +47,13 @@ const Guardian = function (address, context) {
         receive(payload, message, sender) {
             children[0]
                 .ask('error1')
-                .catch(err => {
-                    console.log('Nope');
-                })
-                .subscribe(x => console.log('do I get here'))
+                .subscribe(x => console.log('do I ever get here'))
+
+            setTimeout(() => {
+                children[0]
+                    .ask('error2')
+                    .subscribe(x => console.log('do I ever get here'))
+            }, 1000);
 
             //     .subscribe(() => {
             //         setTimeout(() => {
