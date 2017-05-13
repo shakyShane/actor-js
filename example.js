@@ -54,14 +54,6 @@ const Guardian = function (address, context) {
                     .ask('error2')
                     .subscribe(x => console.log('do I ever get here'))
             }, 1000);
-
-            //     .subscribe(() => {
-            //         setTimeout(() => {
-            //             context.actorSelection('**')[0]
-            //                 .ask('error2')
-            //                 .subscribe(x => sender.reply('ACK'));
-            //         }, 1000);
-            //     });
         }
     }
 };

@@ -26,9 +26,6 @@ it('an actor can recover from a termination', function () {
                 if (payload === 'error1') {
                     throw new Error('Something went wrong');
                 }
-                if (payload === 'error2') {
-                    throw new Error('Something went wrong');
-                }
             }
         }
     };
@@ -36,19 +33,18 @@ it('an actor can recover from a termination', function () {
     const Guardian = function (address, context) {
         let children = [];
         return {
-            postStart() {
+            receive() {
                 children.push(context.actorOf(Child, 'c'));
-                Rx.Observable.concat(
-                    children[0].ask('error1'),
-                    children[0].ask('error2')
-                ).subscribe();
-            },
-            receive(payload) {
-
+                children[0].tell('error1').subscribe();
             }
         }
     };
 
     const actorRef = system.actorOf(Guardian, 'guardian-01');
+    actorRef.tell('msg').subscribe();
     scheduler.flush();
+    assert.deepEqual([
+        [ 'preRestart', 1 ],
+        [ 'postRestart', 2 ]
+    ], calls);
 });

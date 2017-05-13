@@ -19,7 +19,7 @@ module.exports = class {
 
         return fromPromise(this.launcher.run())
             .catch(err => {
-                console.log(err);
+                // console.log(err);
                 return this.stop();
             });
     }

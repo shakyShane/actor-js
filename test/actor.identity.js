@@ -16,9 +16,9 @@ it.skip('an actor can retrieve its own address', function () {
         return {
             postStart() {
                 calls.push('Guardian postStart');
-                console.log('Asking for identity');
+                // console.log('Asking for identity');
                 context.ask('identity').subscribe(x => {
-                    console.log(x);
+                    // console.log(x);
                 });
             },
             receive(payload) {

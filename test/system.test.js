@@ -18,7 +18,7 @@ describe('system.actorOf', function() {
               this.address = address;
           }
           receive() {
-              console.log('RECEIVE');
+              // console.log('RECEIVE');
           }
       };
       const actor = system.actorOf(FileWatcher, 'FileWatcher');

@@ -26,13 +26,13 @@ module.exports.create = function (config) {
     return {
         name: 'ServeStatic',
         missing: function (payload, message) {
-            console.log(message);
+            // console.log(message);
             // console.log('MISSING METHOD/EFFECT', payload);
             return Rx.Observable.throw(new Error('I cannot accept missing methods'));
         },
         effects: {
             init: function () {
-                console.log('ere');
+                // console.log('ere');
                 return empty();
             }
         },

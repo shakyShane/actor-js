@@ -48,7 +48,7 @@ module.exports.create = class {
         });
     }
     postStop() {
-        console.log('watcher -> postStop()');
+        // console.log('watcher -> postStop()');
         this.watcher.close();
     }
 };

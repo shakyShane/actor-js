@@ -9,7 +9,7 @@ module.exports.create = function (input) {
         name: 'Browsersync Server',
         effects: {
             init: function (payload) {
-                console.log(payload);
+                // console.log(payload);
                 return Promise.resolve('as');
             },
             teardown: function () {

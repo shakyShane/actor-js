@@ -19,7 +19,7 @@ module.exports.create = class {
         this.subject = new Rx.Subject();
         this.children = [];
         this.subscription = this.subject.subscribe(x => {
-            console.log('--->', x);
+            // console.log('--->', x);
         });
     }
     init(payload, sender) {
@@ -78,11 +78,11 @@ module.exports.create = class {
         }
     }
     handleEvent(e) {
-        console.log('got an event', e);
+        // console.log('got an event', e);
     }
     postStop() {
         this.subscription.unsubscribe();
         // console.log(this.children);
-        console.log('guardian: postStop()');
+        // console.log('guardian: postStop()');
     }
 };

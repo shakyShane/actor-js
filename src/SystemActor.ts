@@ -13,13 +13,13 @@ export class BaseActorFactory implements IActorFactory {
         return this;
     }
     receive(payload, message) {
-        console.log('Should be overriden');
-        console.log('payload', 'message');
+        // console.log('Should be overriden');
+        // console.log('payload', 'message');
     }
 }
 
 export class SystemActor extends BaseActorFactory {
     receive() {
-        console.log('Sup from system');
+        // console.log('Sup from system');
     }
 }

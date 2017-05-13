@@ -135,7 +135,7 @@ describe('system.actorSelection', function() {
           });
         },
         receive() {
-          console.log(actors.length);
+          // console.log(actors.length);
         }
       }
     };

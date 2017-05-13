@@ -35,7 +35,7 @@ describe('context.parent', function () {
                     context.parent.tell('Child started!').subscribe();
                 },
                 receive() {
-                    console.log('msg');
+                    // console.log('msg');
                 }
             }
         };
