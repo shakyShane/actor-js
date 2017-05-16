@@ -18,6 +18,8 @@ module.exports.create = class {
         this.context = context;
         this.subject = new Rx.Subject();
         this.children = [];
+        this.clients = [];
+        this.payload = {};
         this.subscription = this.subject.subscribe(x => {
             // console.log('--->', x);
         });
@@ -32,6 +34,7 @@ module.exports.create = class {
         }));
 
         this.children = childActors.map(x => x.ref);
+        this.payload = payload;
 
         return Rx.Observable
             .concat(...childActors
@@ -46,9 +49,10 @@ module.exports.create = class {
     }
     clearChildren() {
         return this.context
-            .gracefulStop(this.children)
-            // .do(x => this.children = [])
-            .take(1);
+            .gracefulStop(this.children);
+    }
+    postStart() {
+        this.clients = this.context.actorSelection('../clients');
     }
     receive(action, message, sender) {
 
@@ -78,7 +82,7 @@ module.exports.create = class {
         }
     }
     handleEvent(e) {
-        // console.log('got an event', e);
+        this.clients[0].tell({type: 'file-eevent', payload: e}).subscribe();
     }
     postStop() {
         this.subscription.unsubscribe();

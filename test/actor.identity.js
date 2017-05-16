@@ -10,6 +10,7 @@ it.skip('an actor can retrieve its own address', function () {
     const scheduler = new TestScheduler();
     const system = createSystem({
         messageScheduler: scheduler
+
     });
     let calls = [];
     const Guardian = function (address, context) {
