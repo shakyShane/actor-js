@@ -264,6 +264,9 @@ export class System {
     }
 
     private createGracefulStopSequence(actorRef: ActorRef): Observable<any> {
+        if (!System.isActorRef(actorRef)) {
+            System.warnInvalidActorRef();
+        }
         return Observable.concat(
             this.ask({address: actorRef.address, payload: 'stop'}),
                 // .do(x => console.log('graceful stop OK', actorRef.address)),
@@ -273,6 +276,9 @@ export class System {
     }
 
     public stop(actorRef: ActorRef): Subscription {
+        if (!System.isActorRef(actorRef)) {
+            System.warnInvalidActorRef();
+        }
         return Observable.concat(
             this.tell({address: actorRef.address, payload: 'stop'}),
             this.stopActor(actorRef),
@@ -282,9 +288,29 @@ export class System {
 
     public gracefulStop(actorRefs: ActorRef|ActorRef[]): Observable<any> {
         const refs = [].concat(actorRefs).filter(Boolean);
+
+        if (!refs.every(System.isActorRef)) {
+            System.warnInvalidActorRef();
+        }
+
         // console.log(refs);
         return Observable
             .concat(...refs.map(x => this.createGracefulStopSequence(x)))
             .toArray();
+    }
+
+    static warnInvalidActorRef() {
+        throw new Error('Invalid actor provided. Please check your usage');
+    }
+
+    static isActorRef(input: any) {
+        if (!input) {
+            // anything falsey
+            return false
+        }
+        if (typeof input.address === 'string') {
+            return true;
+        }
+        return false;
     }
 }

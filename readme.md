@@ -14,7 +14,7 @@ even in single-threaded programming environments such as Javascript.
 
 - [x] `actor.tell()` - fire & forget message
 - [x] `actor.ask()` - ask & await async response from an actor
-- [ ] `actor.kill()` - send a message instructing the actor to terminate
+- [ ] `actor.kill()` - send a message instructing an actor to terminate
 
 ### Actor context `ActorContext`
 - [x] `context.stop(IActorRef)` - allow an actor to be stopped via a ref
