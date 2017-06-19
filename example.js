@@ -1,6 +1,6 @@
 require('source-map-support').install();
 const Rx = require('rxjs');
-const {concat, of, empty} = Rx.Observable;
+const {concat, of, empty, merge, timer} = Rx.Observable;
 const {Map} = require('immutable');
 const {createSystem} = require('./dist/index');
 const {create: FileWatcher} = require('./fixtures/watcher');
@@ -23,15 +23,18 @@ function fac() {
         }
     };
 
-    const effects = {
-
-    }
-
     let myState = initialState;
+    let messages = new Rx.Subject();
+    let outgoing = new Rx.Subject();
 
     return {
         postStart() {
-            console.log('Im running')
+            messages
+                .filter(x => x.action.payload.type === 'reload')
+                .switchMap(x => {
+                    return Rx.Observable.timer(2000).mapTo(x)
+                })
+                .subscribe(outgoing)
         },
         reducers,
         state: () => {
@@ -41,22 +44,29 @@ function fac() {
             if (reducers[message.type]) {
                 myState = reducers[message.type](myState, message.payload);
                 sender.reply(myState);
+            } else {
+                outgoing
+                    .filter(x => x.messageID === _.messageID)
+                    .do(x => {
+                        sender.reply(x);
+                    })
+                    .subscribe();
+                messages.next(_);
             }
         },
         effects: {
-            'reload': function(message$) {
-                return message$.ofType();
-            }
+            // 'reload': function(message$) {
+            //     return message$.ofType();
+            // }
         }
     }
 }
 
 const clients = system.actorOf(fac, 'clients');
 
-concat(
+merge(
     clients.ask({type: 'reload'}),
-    clients.ask({type: 'reload'}).delay(1000)
-)
+    timer(1000).flatMap(() => clients.ask({type: 'reload'})))
         .subscribe(x => {
             console.log(x);
         });
