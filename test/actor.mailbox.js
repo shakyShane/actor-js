@@ -5,6 +5,7 @@ const { createSystem } = require('../');
 const { TestScheduler } = require('rxjs');
 const { SystemActor } = require('../dist/SystemActor');
 const { System } = require('../dist/System');
+const { patterns } = require('../dist');
 
 describe('mailboxes', function() {
 
@@ -14,7 +15,7 @@ describe('mailboxes', function() {
             'shane': function(stream) {
                 return stream
                     .switchMap(({action, respond}) => {
-                        return Rx.Observable.of(respond('HEY!')).delay(1200);
+                        return Rx.Observable.of(respond('HEY!')).delay(1);
                     });
             }
         };
@@ -28,6 +29,7 @@ describe('mailboxes', function() {
         };
 
         const actor = system.actorOf(Child);
+        const calls = [];
         actor.ask({type: 'shane', payload: '1'})
             .subscribe(x => {
                 console.log('1', x);

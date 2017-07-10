@@ -10,6 +10,8 @@ import {IScheduler} from "rxjs/Scheduler";
 import {IActorFactory, SystemActor} from "./SystemActor";
 import {IActorRegister, addActor, removeActor} from "./ActorRegister";
 import {ActorRef} from "./ActorRef";
+import {IActorContext} from './ActorContext';
+import {reduxObservable} from "./patterns/redux-observable";
 const logger = debug('staunch');
 
 const log = (ns) => (message) => logger(`${ns}`, message);
@@ -20,7 +22,6 @@ export interface ICreateOptions {
 }
 
 type RegisterFn = (register: {[index: string]: Actor}, IActor) => {[index: string]: Actor};
-
 
 export function createSystem(opts: ICreateOptions = {}): System {
 
@@ -111,6 +112,9 @@ export function createSystem(opts: ICreateOptions = {}): System {
 
 export {
     createActor,
-    createStateActor
+    createStateActor,
 };
 
+export const patterns = {
+    'redux-observable': reduxObservable,
+};

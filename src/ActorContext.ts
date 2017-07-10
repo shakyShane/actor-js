@@ -1,4 +1,3 @@
-import uuid = require('uuid/v4');
 import {Observable} from "rxjs/Observable";
 
 export interface IActorContext {
