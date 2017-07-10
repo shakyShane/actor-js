@@ -41,53 +41,55 @@ export function createSystem(opts: ICreateOptions = {}): System {
         .scan(function (acc, {actor, fn}) {
             return fn(acc, actor);
         }, {} as IActorRegister)
-        // .do(x => console.log(x))
         .subscribe(system.actorRegister);
 
-    // for incoming actors, create a mailbox for each
-    const actorsWithMailboxes = system.incomingActors
-        .map(actor => {
-            const mailbox = getMailbox(actor, actor.mailboxType, system);
-            return {
-                mailbox,
-                actor
-            }
-        }).share();
-
-    actorsWithMailboxes.scan((acc, { actor, mailbox }) => {
-        acc[actor.address] = mailbox;
-        return acc;
-    }, <Actor>{}).subscribe(system.mailboxes);
+    // // for incoming actors, create a mailbox for each
+    // const actorsWithMailboxes = system.incomingActors
+    //     .map(actor => {
+    //         const mailbox = getMailbox(actor, actor.mailboxType, system);
+    //         return {
+    //             mailbox,
+    //             actor
+    //         }
+    //     }).share();
+    //
+    // actorsWithMailboxes.scan((acc, { actor, mailbox }) => {
+    //     acc[actor.address] = mailbox;
+    //     return acc;
+    // }, <Actor>{}).subscribe(system.mailboxes);
 
     // for each registered mailbox, subscribe to
     // it's outgoing messages and pump the output
     // into the 'responses' stream
-    actorsWithMailboxes.flatMap(x => {
-        return x.mailbox
+    system.incomingActors.flatMap((actor) => {
+        return actor
+            .mailbox
             .outgoing
             .do((incoming: MessageResponse) => {
                 if (incoming.errors.length) {
-                    const address = x.actor.address;
-                    const factory = x.actor._factoryMethod;
+                    const address = actor.address;
+                    const factory = actor._factoryMethod;
                     return Observable.concat(
-                        system.restartActor(x.actor),
-                        system.removeActor(new ActorRef(x.actor.address, system)),
+                        system.restartActor(actor),
+                        system.removeActor(new ActorRef(actor.address, system)),
                         system.reincarnate(address, factory)
                     ).subscribe();
                 }
             })
-    }).subscribe(x => system.responses.next(x as any));
+    })
+        .subscribe(x => system.responses.next(x as any));
 
     // the arbiter takes all incoming messages throughout
     // the entire system and distributes them as needed into
     // the correct mailboxes
     system.arbiter
-        .withLatestFrom(system.actorRegister, system.mailboxes, function ({action, messageID}, register, mailboxes) {
+        .withLatestFrom(system.actorRegister, function ({action, messageID}, register) {
             const [ name ] = action.address.split('.');
+            const actor = register[name];
             return {
                 action,
-                actor: register[name],
-                mailbox: mailboxes[name],
+                actor,
+                mailbox: actor.mailbox,
                 register,
                 name,
                 messageID

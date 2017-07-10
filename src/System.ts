@@ -15,6 +15,8 @@ import {IScheduler} from "rxjs/Scheduler";
 import {IActorContext} from "./ActorContext";
 import Disposable = Rx.Disposable;
 import {Subscription} from "rxjs/Subscription";
+import {createDefaultMailbox} from "./createDefaultMailbox";
+import {setMaxListeners} from "cluster";
 const logger = debug('acjs:System');
 const lifecycleLogger = debug('acjs:lifecycle');
 const messageLogger = debug('acjs:message');
@@ -29,10 +31,10 @@ export class System {
     public incomingActors: Subject<Actor>;
     public outgoingActors: Subject<ActorRef>;
     public responses: Subject<MessageResponse>;
+    public cancelations = new Subject<MessageResponse>();
     public mailboxes: BehaviorSubject<any>;
     public arbiter: Subject<IncomingMessage>;
     public address = '/system';
-    public mailboxTypes = new Set(['default', 'state']);
     public messageScheduler: IScheduler;
 
     constructor(opts: ICreateOptions) {
@@ -70,14 +72,8 @@ export class System {
     }
 
     public decorateActor(actor, address, factory) {
-        if (!actor.mailboxType) {
-            actor.mailboxType = 'default';
-        } else {
-            if (!this.mailboxTypes.has(actor.mailboxType)) {
-                console.error('Mailbox type not supported');
-                actor.mailboxType = 'default';
-            }
-        }
+
+        actor.mailbox = createDefaultMailbox(actor);
 
         actor._factoryMethod = factory;
 
@@ -88,7 +84,7 @@ export class System {
         return actor;
     }
 
-    public initActor(actor, context, address, factory): ActorRef {
+    public initActor(actor: Actor, context, address, factory): ActorRef {
 
         if (actor.preStart) {
             lifecycleLogger('preStart', address);
@@ -100,6 +96,20 @@ export class System {
         if (actor.postStart) {
             lifecycleLogger('postStart', address);
             actor.postStart();
+        }
+
+        if (actor.setupReceive) {
+            lifecycleLogger('setupReceive', address);
+            actor.setupReceive(actor.mailbox.incoming)
+                .map(incomingMessage => {
+                    return {
+                        errors: [],
+                        response: (incomingMessage as any).resp,
+                        respId: incomingMessage.messageID
+                    }
+                })
+                .do(x => actor.mailbox.outgoing.next(x))
+                .subscribe();
         }
 
         return new ActorRef(actor.address, this);
@@ -184,6 +194,7 @@ export class System {
     private createContext(parentAddress: string): IActorContext {
         const bound = this.actorOf.bind(this);
         const boundSelection = this.actorSelection.bind(this);
+        const cleanupCancelledMessages = this.cleanupCancelledMessages.bind(this);
         const boundStop = this.stop.bind(this);
         const gracefulStop = this.gracefulStop.bind(this);
         const parentRef = this.getParentRef(parentAddress);
@@ -192,6 +203,7 @@ export class System {
         return {
             self,
             parent: parentRef,
+            cleanupCancelledMessages,
             actorOf(factory, localAddress?): ActorRef {
                 const prefix = parentAddress;
                 if (!localAddress) {
@@ -217,16 +229,27 @@ export class System {
     public ask(action: IOutgoingMessage, messageID?: string): Observable<any> {
         if (!messageID) messageID = uuid();
 
-        const trackResponse = this.responses
+        const responses = this.responses
+            .filter(x => x.respId === messageID);
+        
+        const cancelations = this.cancelations
             .filter(x => x.respId === messageID)
+            .map(x => {
+                return Object.assign({}, x, {cancelled: true});
+            });
+        
+        const trackResponse = Observable.merge(responses, cancelations)
+            .take(1)
             .do(x => messageLogger('ask resp <-', x))
             .flatMap((incoming: MessageResponse) => {
                 if (incoming.errors.length) {
                     return Observable.throw(incoming.errors[0])
                 }
+                if (incoming.cancelled) {
+                    return Observable.empty();
+                }
                 return Observable.of(incoming.response);
-            })
-            .take(1);
+            });
 
         const messageSender = Observable
             .of({action, messageID}, this.messageScheduler)
@@ -240,9 +263,11 @@ export class System {
      * tell() means “fire-and-forget”, e.g. send a message asynchronously and return immediately. Also known as tell.
      */
     public tell(action: IOutgoingMessage, messageID?: string): Observable<any> {
+
         if (!messageID) messageID = uuid();
+
         return Observable.of({action, messageID}, this.messageScheduler)
-            .do(this.arbiter)
+            .do(x => this.arbiter.next(x))
             .take(1);
     }
 
@@ -312,5 +337,64 @@ export class System {
             return true;
         }
         return false;
+    }
+
+    static filterByType(stream: Observable<IncomingMessage>, type: string): Observable<IncomingMessage> {
+        return stream
+            .filter((msg: IncomingMessage) => {
+                const { address, payload } = msg.action;
+                return payload.type === type;
+            })
+    }
+
+    static addResponse(stream: Observable<any>): Observable<any> {
+        return stream.map((msg: IncomingMessage) => {
+            const { address, payload } = msg.action;
+            return {
+                action: payload,
+                respond: (resp: any) => {
+                    return Object.assign({}, msg, {resp});
+                }
+            }
+        })
+    }
+
+    static ofType(stream: Observable<any>, type: string): Observable<any> {
+        return System.addResponse(
+            System.filterByType(stream, type)
+        );
+    }
+
+    public cleanupCancelledMessages(stream, type: string, fn) {
+
+        const filtered = System.filterByType(stream, type);
+        const output = fn(System.addResponse(filtered));
+
+        const collated = filtered.scan((acc, item) => {
+                return acc.concat(item);
+            }, []);
+
+        return output
+            .take(1)
+            .withLatestFrom(collated, (out, all) => {
+                const toCancel = all
+                    .filter(x => {
+                        return x.messageID !== out.messageID;
+                    })
+                    .map((msg: IncomingMessage) => {
+                        return Object.assign(
+                            {},
+                            msg,
+                            {respId: msg.messageID},
+                            {errors: []}
+                        )
+                    });
+
+                toCancel.forEach(x => {
+                    this.cancelations.next(x);
+                });
+
+                return out;
+            });
     }
 }

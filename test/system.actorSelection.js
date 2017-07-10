@@ -13,7 +13,6 @@ describe('system.actorSelection', function() {
     const Guardian = class {
       constructor(address) {
         this.type = 'Guardian';
-        this.mailboxType = 'default';
         this.address = address;
       }
       receive(payload) {
@@ -33,7 +32,6 @@ describe('system.actorSelection', function() {
     const Guardian = class {
       constructor(address) {
         this.type = 'Guardian';
-        this.mailboxType = 'default';
         this.address = address;
       }
       receive(payload) {
@@ -43,7 +41,6 @@ describe('system.actorSelection', function() {
     const Guardian2 = class {
       constructor(address) {
         this.type = 'Guardian2';
-        this.mailboxType = 'default';
         this.address = address;
       }
       receive(payload) {

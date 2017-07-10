@@ -8,5 +8,6 @@ import 'rxjs/add/operator/scan';
 import 'rxjs/add/operator/share';
 import 'rxjs/add/operator/take';
 import 'rxjs/add/operator/withLatestFrom';
+import 'rxjs/add/operator/bufferCount';
 import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/mergeMap';

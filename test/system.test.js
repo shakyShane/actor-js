@@ -14,7 +14,6 @@ describe('system.actorOf', function() {
       const FileWatcher = class {
           constructor(address) {
               this.type = 'FileWatcher';
-              this.mailboxType = 'default';
               this.address = address;
           }
           receive() {
@@ -33,14 +32,12 @@ describe('system.actorOf', function() {
       const Watcher = class {
           constructor(address) {
               this.type        = 'Watcher';
-              this.mailboxType = 'default';
               this.address = address;
           }
       };
       const FileWatcher = class {
           constructor(address, context) {
               this.type        = 'FileWatcher';
-              this.mailboxType = 'default';
               this.address     = address;
               this.actors      = [];
               this.context     = context;
@@ -71,7 +68,6 @@ describe('system.actorOf', function() {
       const Watcher = class {
           constructor(address) {
               this.type        = 'Watcher';
-              this.mailboxType = 'default';
               this.address = address;
           }
           // todo - sender here should also be an actor ref
@@ -82,18 +78,18 @@ describe('system.actorOf', function() {
       const FileWatcher = class {
           constructor(address, context) {
               this.type        = 'FileWatcher';
-              this.mailboxType = 'default';
               this.address     = address;
               this.actors      = [];
               this.context     = context;
           }
           receive(payload, message, sender) {
               switch(payload) {
-                  case 'init':
+                  case 'init': {
                       this.actors.push(
                           this.context.actorOf(Watcher, 'sub-path-01')
                       );
                       this.actors[0].tell('Hey!').subscribe();
+                  }
               }
           }
       };
@@ -114,7 +110,6 @@ describe('system.actorOf', function() {
       const GrandchildActor = class {
           constructor(address) {
               this.type        = 'GrandchildActor';
-              this.mailboxType = 'default';
               this.address = address;
           }
           // todo - sender here should also be an actor ref
@@ -125,7 +120,6 @@ describe('system.actorOf', function() {
       const ChildActor = class {
           constructor(address, context) {
               this.type        = 'ChildActor';
-              this.mailboxType = 'default';
               this.address = address;
               this.actors = [
                   context.actorOf(GrandchildActor)
@@ -141,7 +135,6 @@ describe('system.actorOf', function() {
       const SystemLevelActor = class {
           constructor(address, context) {
               this.type        = 'SystemLevelActor';
-              this.mailboxType = 'default';
               this.address     = address;
               this.actors      = [];
               this.context     = context;

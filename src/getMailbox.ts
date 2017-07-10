@@ -1,12 +1,12 @@
 import Rx = require('rx');
 import {createDefaultMailbox} from "./createDefaultMailbox";
-import {createStateMailbox} from "./createStateMailbox";
+// import {createStateMailbox} from "./createStateMailbox";
 import {Observable} from "rxjs/Observable";
 import {Subject} from 'rxjs/Subject';
 
 export default function getMailbox(actor, type: MailboxType, system): Mailbox {
     if (type === 'default') {
-        return createDefaultMailbox(actor, system);
+        return createDefaultMailbox(actor);
     }
     // if (type === 'state') {
     //     return createStateMailbox(actor, system);
@@ -14,7 +14,7 @@ export default function getMailbox(actor, type: MailboxType, system): Mailbox {
 }
 
 export interface Mailbox {
-    outgoing: Observable<any>
+    outgoing: Subject<MessageResponse>
     incoming: Subject<IncomingMessage>
 }
 
