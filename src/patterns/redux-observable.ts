@@ -17,7 +17,13 @@ export function reduxObservable(actor: Actor, context: IActorContext) {
         .flatMap(key => {
             const fn: EffectFn = methods[key];
             return context.cleanupCancelledMessages(incoming, key, function(stream) {
-                return fn(stream);
+                return fn(stream)
+                    .catch((e: any): any => {
+                        console.log(`Uncaught error from '${fn.name}'`);
+                        console.log(`Be sure to handle errors in '${fn.name}'`);
+                        console.error(e);
+                        return Rx.Observable.empty();
+                    })
             })
         })
         .map((incomingMessage: IncomingMessage) => {

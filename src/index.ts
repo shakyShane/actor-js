@@ -14,6 +14,7 @@ import {Subscription} from 'rxjs';
 import {IActorContext} from './ActorContext';
 import {reduxObservable} from "./patterns/redux-observable";
 const logger = debug('staunch');
+import * as patterns from './patterns'
 
 const log = (ns) => (message) => logger(`${ns}`, message);
 
@@ -114,8 +115,5 @@ export function createSystem(opts: ICreateOptions = {}): System {
 export {
     createActor,
     createStateActor,
-};
-
-export const patterns = {
-    'redux-observable': reduxObservable,
+    patterns,
 };
