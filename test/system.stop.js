@@ -139,7 +139,7 @@ describe('system.stop', function() {
         const Child = function () {
             return {
                 receive(payload, message, sender) {
-                    calls.push(`child receive ${payload}`);
+                    calls.push(`child receive ${payload.type}`);
                     sender.reply('All done here!');
                 },
                 postStop() {
@@ -155,8 +155,8 @@ describe('system.stop', function() {
                     actorRefs.push(context.actorOf(Child))
                 },
                 receive(payload, message, sender) {
-                    calls.push(`Guardian receive ${payload}`);
-                    switch(payload) {
+                    calls.push(`Guardian receive ${payload.type}`);
+                    switch(payload.type) {
                         case 'stop':
                             context.gracefulStop(actorRefs)
                                 .subscribe(() => sender.reply('Im done!'));

@@ -2,44 +2,38 @@ const {Observable} = require('rxjs');
 const connect = require('connect');
 const http = require('http');
 
-module.exports.create = class {
-    constructor(address, context) {
-        this.address = address;
-        this.context = context;
-        this.server = null;
-    }
-
-    init(payload) {
+module.exports = function server(address, context) {
+    let server;
+    function createServer(options) {
         const app = connect();
         app.use('/shane', function (req, res, next) {
             res.end('sup');
         });
-        this.server = http.createServer(app);
-        return Observable.create(obs => {
-            const s = this.server.listen(payload.port);
-            const a = s.address();
-            obs.next(a);
-        }).take(1);
+        server = http.createServer(app);
+        server.listen(options.port);
+        return server;
     }
-
-    stop() {
-        return Observable.create((obs) => {
-            console.log('stopping!');
-            this.server.close(() => obs.complete());
-        });
+    function close(server) {
+        server.close();
     }
-
-    receive(action, message, sender) {
-        if (action.type === 'init') {
-            if (this.server && this.server.listening) {
-                Observable.concat(
-                    this.stop(),
-                    this.init(action.payload)
-                ).subscribe(x => sender.reply(x));
-            } else {
-                this.init(action.payload)
-                    .subscribe(x => sender.reply(x));
+    return {
+        methods: {
+            'init': function(stream) {
+                return stream.switchMap(({action, respond}) => {
+                    if (server && server.listening) {
+                        close(server);
+                    }
+                    server = createServer(action.payload);
+                    return Observable.of(respond(server.address()));
+                });
+            },
+            'stop': function(stream) {
+                return stream.switchMap(({action, respond}) => {
+                    close(server);
+                    return Observable.of(respond('stopped'));
+                });
             }
-        }
+        },
+        patterns: ['reduxObservable'],
     }
 };

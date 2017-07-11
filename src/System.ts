@@ -307,7 +307,7 @@ export class System {
             System.warnInvalidActorRef();
         }
         return Observable.concat(
-            this.ask({address: actorRef.address, payload: 'stop'}),
+            this.ask({address: actorRef.address, payload: {type: 'stop'}}),
                 // .do(x => console.log('graceful stop OK', actorRef.address)),
             this.stopActor(actorRef),
             this.removeActor(actorRef)
@@ -385,11 +385,11 @@ export class System {
         const output = fn(System.addResponse(filtered));
 
         const collated = filtered.scan((acc, item) => {
-                return acc.concat(item);
-            }, []);
+            return acc.concat(item);
+        }, []);
 
         return output
-            .take(1)
+            // .take(1)
             .withLatestFrom(collated, (out, all) => {
                 const toCancel = all
                     .filter(x => {

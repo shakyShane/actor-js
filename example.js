@@ -1,66 +1,25 @@
 const {Observable} = require('rxjs');
 const ajs = require('./');
 const request = require('request');
-const r = Observable.bindNodeCallback(request);
-
-
-const Catalog = class {
-    constructor(address, context) {
-        this.address = address;
-        this.context = context;
-        this.children = [];
-    }
-    postStart() {
-        this.children = [
-            this.context.actorOf(Attributes),
-            this.context.actorOf(CategoryList),
-        ];
-    }
-    receive(payload, message, sender) {
-        if (payload.type === 'update') {
-            ajs.patterns.askMany(this.children, {type: 'get'})
-                .subscribe(x => {
-                    sender.reply(x);
-                })
-        }
-    }
-};
-
-const Attributes = function (address, context) {
-    return {
-        methods: {
-            'get': function(stream) {
-                return stream.switchMap(({action, respond}) => {
-                    return r('http://info.sunspel.com/wp-json/posts')
-                        .map(([_, body]) => body)
-                        .map(respond);
-                });
-            }
-        },
-        patterns: ['reduxObservable']
-    }
-};
-
-const CategoryList = function (address, context) {
-    return {
-        methods: {
-            'get': function(stream) {
-                return stream.switchMap(({action, respond}) => {
-                    return r('http://info.sunspel.com/wp-json/posts')
-                        .map(([_, body]) => body)
-                        .map(respond);
-                });
-            }
-        },
-        patterns: ['reduxObservable']
-    }
-};
+const createServer = require('./fixtures/server');
+const watcherGuardian = require('./fixtures/watcherGuardian');
 
 const system = ajs.createSystem();
-const catalog = system.actorOf(Catalog);
+// const guardian = system.actorOf(watcherGuardian);
+const server = system.actorOf(createServer);
 
-catalog
-    .ask({type: 'update'})
-    .subscribe((reply) => {
-        console.log(reply);
+server.ask({type: 'init', payload: {port: 9000}})
+    .subscribe(x => {
+        console.log(x);
     });
+
+// guardian
+//     .ask({type: 'init', payload: ['./src', './test']})
+//     .subscribe((reply) => {
+//         console.log('Guardian ready');
+//     });
+
+setTimeout(function() {
+    server.ask({type: 'init', payload: {port: 9001}})
+        .subscribe(x);
+}, 5000);

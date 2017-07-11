@@ -3,52 +3,42 @@ const { empty, of } = Rx.Observable;
 const Immutable = require('immutable');
 const chokidar  = require('chokidar');
 
-module.exports.create = class {
-    constructor(address, context) {
-        this.address = address;
-        this.context = context;
-        this.watcher = null;
-        this.parent = context.actorSelection('../')[0];
-    }
-    stop(sender) {
-        return sender.reply('ACK');
-    }
-    receive(action, message, sender) {
-        if (action === 'stop') {
-            return this.stop(sender);
+module.exports = function watcher(address, context) {
+
+    const chokidar = require('chokidar');
+    let watcher;
+
+    function watchOne(pattern) {
+        if (watcher) {
+            watcher.close();
         }
-        switch (action.type) {
-            case 'init': {
-                return this.init({
-                    patterns: action.payload.patterns,
-                    options: {}
-                }, sender);
-            }
-        }
-    }
-    init(payload, sender) {
-        const {patterns, options} = payload;
-        const cOptions = Object.assign({}, options,
-            {ignoreInitial: true}
-        );
-        this.watcher = chokidar.watch(patterns, cOptions)
-            .on('all', (event, path) => {
-                if (event === 'change') {
-                    this.parent.tell({
-                        type: 'event',
-                        payload: {event, path}
-                    }).take(1).subscribe();
-                }
-            });
-        this.watcher.on('ready', () => {
-            // console.log(`+ watcher ready for pattern \`${patterns}\``);
-            setTimeout(function () {
-                sender.reply('k');
-            }, 500);
+        watcher = chokidar.watch(pattern);
+        watcher.on('change', function(path) {
+            console.log('change', path);
         });
     }
-    postStop() {
-        // console.log('watcher -> postStop()');
-        this.watcher.close();
+
+    return {
+        postStart(){
+            console.log('post start watcher')
+        },
+        postStop(){
+            console.log('post stop watcher')
+        },
+        methods: {
+            'init': function(stream) {
+                return stream.switchMap(({action, respond}) => {
+                    watchOne(action.payload);
+                    return Observable.of(respond('Ready'));
+                });
+            },
+            'stop': function (stream) {
+                return stream.switchMap(({action, respond}) => {
+                    if (watcher) watcher.close();
+                    return Observable.of(respond('done!'));
+                });
+            }
+        },
+        patterns: ['reduxObservable'],
     }
 };
