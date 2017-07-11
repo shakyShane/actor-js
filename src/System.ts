@@ -17,6 +17,7 @@ import Disposable = Rx.Disposable;
 import {Subscription} from "rxjs/Subscription";
 import {createDefaultMailbox} from "./createDefaultMailbox";
 import {setMaxListeners} from "cluster";
+import * as patterns from './patterns';
 const logger = debug('acjs:System');
 const lifecycleLogger = debug('acjs:lifecycle');
 const messageLogger = debug('acjs:message');
@@ -110,6 +111,19 @@ export class System {
                 })
                 .do(x => actor.mailbox.outgoing.next(x))
                 .subscribe();
+        }
+
+        if (actor.patterns) {
+            actor.patterns.forEach(pattern => {
+                const match = patterns[pattern];
+                if (match) {
+                    match.call(null, actor, context);
+                }
+            });
+        }
+
+        if (actor.receive) {
+            patterns.receive(actor, context);
         }
 
         return new ActorRef(actor.address, this);

@@ -7,24 +7,45 @@ const { SystemActor } = require('../dist/SystemActor');
 const { System } = require('../dist/System');
 const { patterns } = require('../dist');
 
-describe.only('mailboxes', function() {
+describe('mailboxes', function() {
+
+    it('does not affect basic actor .receive', function(done) {
+        const system = createSystem();
+        const Child = function (address, context) {
+            return {
+                receive(payload, incomingMessage, sender) {
+                    sender.reply('Hey!');
+                }
+            }
+        };
+        const actor = system.actorOf(Child);
+        const calls = [];
+        actor.ask('anything')
+            .subscribe(
+                () => calls.push('next'),
+                () => calls.push('error'),
+                () => {
+                    calls.push('complete');
+                    assert.deepEqual(calls, ['next', 'complete']);
+                    done();
+                }
+            );
+    });
 
     it('works with simple events', function(done) {
         const system = createSystem();
-        const methods = {
-            'shane': function(stream) {
-                return stream
-                    .switchMap(({action, respond}) => {
-                        return Rx.Observable.of(respond('HEY!')).delay(1);
-                    });
-            }
-        };
 
         const Child = function (address, context) {
             return {
-                setupReceive(incomingMessageStream) {
-                    return patterns['redux-observable'](incomingMessageStream, methods, context);
-                }
+                methods: {
+                    'shane': function(stream) {
+                        return stream
+                            .switchMap(({action, respond}) => {
+                                return Rx.Observable.of(respond('HEY!')).delay(1);
+                            });
+                    }
+                },
+                patterns: ['reduxObservable'],
             }
         };
 

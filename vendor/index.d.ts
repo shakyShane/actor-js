@@ -31,4 +31,4 @@ interface MessageResponse {
     cancelled?: boolean
 }
 
-type Method = (payload: any, message: IncomingMessage) => any;
+type Method = (payload: any) => any;

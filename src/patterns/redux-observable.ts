@@ -1,12 +1,32 @@
 import {Observable} from "rxjs/Observable";
 import {IActorContext} from "../ActorContext";
+import {Actor} from "../createActor";
+import {Subscription} from 'rxjs';
 
-export function reduxObservable(stream: Observable<IncomingMessage>, methods: object, context: IActorContext) {
+type EffectFn = (stream: Observable<IncomingMessage>) => Observable<any>;
+
+export function reduxObservable(actor: Actor, context: IActorContext) {
+    const {methods} = actor;
+    const {incoming} = actor.mailbox;
+
+    if (!methods) {
+        throw new Error('Missing `methods` for reduxObservable pattern');
+    }
+
     return Observable.from(Object.keys(methods))
         .flatMap(key => {
-            const fn = methods[key];
-            return context.cleanupCancelledMessages(stream, key, function(stream) {
+            const fn: EffectFn = methods[key];
+            return context.cleanupCancelledMessages(incoming, key, function(stream) {
                 return fn(stream);
             })
-        });
-};
+        })
+        .map((incomingMessage: IncomingMessage) => {
+            return {
+                errors: [],
+                response: (incomingMessage as any).resp,
+                respId: incomingMessage.messageID
+            }
+        })
+        .do(x => actor.mailbox.outgoing.next(x))
+        .subscribe();
+}

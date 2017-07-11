@@ -17,9 +17,10 @@ export interface Actor {
     preRestart?(): void;
     postRestart?(): void;
     address: string;
-    mailbox: Mailbox
-    methods?: {[methodName: string]: Method}
-    _factoryMethod?: any
+    mailbox: Mailbox;
+    patterns?: string[];
+    methods?: {[methodName: string]: Method};
+    _factoryMethod?: any;
 }
 
 export interface IncomingActor {

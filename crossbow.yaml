@@ -1,12 +1,12 @@
 tasks:
 
   unit:
-    - '@npm mocha __tests__'
+    - '@npm mocha'
 
   test:
     - '@sh rm -rf dist/**'
     - '@npm tsc'
-    - browser
+#    - browser
     - unit
 
   build:

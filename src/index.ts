@@ -10,6 +10,7 @@ import {IScheduler} from "rxjs/Scheduler";
 import {IActorFactory, SystemActor} from "./SystemActor";
 import {IActorRegister, addActor, removeActor} from "./ActorRegister";
 import {ActorRef} from "./ActorRef";
+import {Subscription} from 'rxjs';
 import {IActorContext} from './ActorContext';
 import {reduxObservable} from "./patterns/redux-observable";
 const logger = debug('staunch');
