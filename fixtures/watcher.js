@@ -19,23 +19,23 @@ module.exports = function watcher(address, context) {
     }
 
     return {
-        postStart(){
-            console.log('post start watcher')
+        postStart() {
+            console.log('Watcher started')
         },
-        postStop(){
+        postStop() {
             console.log('post stop watcher')
         },
         methods: {
             'init': function(stream) {
-                return stream.switchMap(({action, respond}) => {
+                return stream.flatMap(({action, respond}) => {
                     watchOne(action.payload);
-                    return Observable.of(respond('Ready'));
+                    return of(respond('Ready'));
                 });
             },
             'stop': function (stream) {
-                return stream.switchMap(({action, respond}) => {
+                return stream.flatMap(({action, respond}) => {
                     if (watcher) watcher.close();
-                    return Observable.of(respond('done!'));
+                    return of(respond('done!'));
                 });
             }
         },

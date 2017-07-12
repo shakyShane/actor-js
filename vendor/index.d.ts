@@ -2,8 +2,8 @@ interface Window {
     staunch: any
 }
 
-type AskFn = (name: string, payload: any, id?: string) => any
-type TellFn = (name: string, payload: any, id?: string) => any
+type AskFn = (name: string, payload?: any, id?: string) => any
+type TellFn = (name: string, payload?: any, id?: string) => any
 
 interface ActorRef {
     ask: AskFn,

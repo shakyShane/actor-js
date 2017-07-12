@@ -24,7 +24,8 @@ module.exports = function server(address, context) {
                         close(server);
                     }
                     server = createServer(action.payload);
-                    return Observable.of(respond(server.address()));
+                    const response = server.address();
+                    return Observable.of(respond(response));
                 });
             },
             'stop': function(stream) {

@@ -5,21 +5,24 @@ const createServer = require('./fixtures/server');
 const watcherGuardian = require('./fixtures/watcherGuardian');
 
 const system = ajs.createSystem();
-// const guardian = system.actorOf(watcherGuardian);
 const server = system.actorOf(createServer);
+const watcher = system.actorOf(watcherGuardian);
 
 server.ask({type: 'init', payload: {port: 9000}})
     .subscribe(x => {
         console.log(x);
     });
 
-// guardian
-//     .ask({type: 'init', payload: ['./src', './test']})
-//     .subscribe((reply) => {
-//         console.log('Guardian ready');
-//     });
+watcher
+    .ask({type: 'init', payload: ['./src', './test']})
+    .subscribe((reply) => {
+        console.log('Guardian ready');
+    });
 
 setTimeout(function() {
-    server.ask({type: 'init', payload: {port: 9001}})
-        .subscribe(x);
+    watcher
+        .ask({type: 'init', payload: ['./src', './test']})
+        .subscribe((reply) => {
+            console.log('Guardian ready');
+        });
 }, 5000);

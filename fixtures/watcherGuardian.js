@@ -14,35 +14,42 @@ function createFromString(input) {
 
 module.exports = function watcherGuardian(address, context) {
 
-    function initWatchers(patterns) {
+    function stopWatchers() {
         const selected = context.actorSelection('**');
         if (selected.length) {
-            console.log('prev');
+            return context.gracefulStop(selected).toArray();
         }
-        return from(patterns)
-                .concatMap(pattern => {
-                    return context.actorOf(Watcher).ask({type: 'init', payload: pattern});
-                });
+        return of(true);
+    }
+
+    function initWatchers(patterns) {
+        return stopWatchers()
+            .flatMap(() => {
+                return from(patterns)
+                    .concatMap(pattern => {
+                        return context.actorOf(watcher).ask({type: 'init', payload: pattern});
+                    })
+            })
+            .toArray();
     }
 
     return {
         methods: {
             'init': function(stream) {
                 return stream
-                        .switchMap(({action, respond}) => {
-                            return initWatchers(action.payload)
-                                    .toArray()
-                                    .mapTo(respond('All done'));
-                        });
+                    .switchMap(({action, respond}) => {
+                        return initWatchers(action.payload)
+                            .mapTo(respond('All done'));
+                    });
             },
             'stop': function(stream) {
                 return stream
-                        .switchMap(({action, respond}) => {
-                            return from(context.actorSelection('**'))
-                                    .flatMap(actorRef => context.gracefulStop(actorRef))
-                                    .toArray()
-                                    .mapTo(respond('ready'))
-                        });
+                    .switchMap(({action, respond}) => {
+                        return from(context.actorSelection('**'))
+                            .flatMap(actorRef => context.gracefulStop(actorRef))
+                            .toArray()
+                            .mapTo(respond('ready'))
+                    });
             }
         },
         patterns: ['reduxObservable']
