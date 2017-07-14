@@ -1,5 +1,5 @@
 {
-  "name": "actor-js",
+  "name": "aktor-js",
   "version": "1.1.1",
   "description": "Actor model (style) API in JS",
   "main": "dist/index.js",
