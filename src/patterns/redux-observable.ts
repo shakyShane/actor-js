@@ -22,7 +22,7 @@ export function reduxObservable(actor: Actor, context: IActorContext) {
                         console.log(`Uncaught error from '${fn.name}'`);
                         console.log(`Be sure to handle errors in '${fn.name}'`);
                         console.error(e);
-                        return Rx.Observable.empty();
+                        return Observable.empty();
                     })
             })
         })
