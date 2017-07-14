@@ -8,7 +8,7 @@ const serveStatic = require('./fixtures/serveStatic');
 const system  = ajs.createSystem();
 const server  = system.actorOf(createServer);
 const watcher = system.actorOf(watcherGuardian);
-const ss = system.actorOf(serveStatic);
+const ss      = system.actorOf(serveStatic);
 
 ss.ask({type: 'init', payload: ['test', 'src', {route: '/shane', dir: 'web'}]})
     .flatMap(output => {
