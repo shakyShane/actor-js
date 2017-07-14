@@ -1,7 +1,7 @@
 {
   "name": "actor-js",
   "version": "1.1.0",
-  "description": "",
+  "description": "Actor model (style) API in JS",
   "main": "dist/index.js",
   "devDependencies": {
     "browserify": "^14.1.0",
