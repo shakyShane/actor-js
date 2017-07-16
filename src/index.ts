@@ -46,21 +46,6 @@ export function createSystem(opts: ICreateOptions = {}): System {
         }, {} as IActorRegister)
         .subscribe(system.actorRegister);
 
-    // // for incoming actors, create a mailbox for each
-    // const actorsWithMailboxes = system.incomingActors
-    //     .map(actor => {
-    //         const mailbox = getMailbox(actor, actor.mailboxType, system);
-    //         return {
-    //             mailbox,
-    //             actor
-    //         }
-    //     }).share();
-    //
-    // actorsWithMailboxes.scan((acc, { actor, mailbox }) => {
-    //     acc[actor.address] = mailbox;
-    //     return acc;
-    // }, <Actor>{}).subscribe(system.mailboxes);
-
     // for each registered mailbox, subscribe to
     // it's outgoing messages and pump the output
     // into the 'responses' stream

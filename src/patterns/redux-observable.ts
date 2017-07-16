@@ -4,6 +4,7 @@ import {Actor} from "../createActor";
 import {Subscription} from 'rxjs';
 
 type EffectFn = (stream: Observable<IncomingMessage>) => Observable<any>;
+export type IRespondableStream = Observable<{respond: (reponse: any) => any, type: string, payload?:any}>
 
 export function reduxObservable(actor: Actor, context: IActorContext) {
     const {methods} = actor;

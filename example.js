@@ -10,20 +10,21 @@ const server  = system.actorOf(createServer);
 const watcher = system.actorOf(watcherGuardian);
 const ss      = system.actorOf(serveStatic);
 
-ss.ask({type: 'init', payload: ['test', 'src', {route: '/shane', dir: 'web'}]})
-    .flatMap(output => {
-        const {middleware} = output;
-        return server.ask({
-            type: 'init',
-            payload: {
-                port: 9000,
-                middleware
-            }
-        }).map(address => `http://localhost:${address.port}`);
-    })
-    .subscribe(x => {
-        console.log('ready!', x);
-    })
+
+// ss.ask({type: 'init', payload: ['test', 'src', {route: '/shane', dir: 'web'}]})
+//     .flatMap(output => {
+//         const {middleware} = output;
+//         return server.ask({
+//             type: 'init',
+//             payload: {
+//                 port: 9000,
+//                 middleware
+//             }
+//         }).map(address => `http://localhost:${address.port}`);
+//     })
+//     .subscribe(x => {
+//         console.log('ready!', x);
+//     })
 
 // watcher
 //     .ask({type: 'init', payload: ['./src', './test']})

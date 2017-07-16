@@ -18,6 +18,7 @@ import {Subscription} from "rxjs/Subscription";
 import {createDefaultMailbox} from "./createDefaultMailbox";
 import {setMaxListeners} from "cluster";
 import * as patterns from './patterns';
+import {IRespondableStream} from "./patterns/redux-observable";
 const logger = debug('acjs:System');
 const lifecycleLogger = debug('acjs:lifecycle');
 const messageLogger = debug('acjs:message');
@@ -361,7 +362,7 @@ export class System {
             })
     }
 
-    static addResponse(stream: Observable<any>): Observable<any> {
+    static addResponse(stream: Observable<any>): IRespondableStream {
         return stream.map((msg: IncomingMessage) => {
             const { address, action } = msg.message;
             return {
@@ -374,7 +375,7 @@ export class System {
         })
     }
 
-    static ofType(stream: Observable<any>, type: string): Observable<any> {
+    static ofType(stream: Observable<any>, type: string): IRespondableStream {
         return System.addResponse(
             System.filterByType(stream, type)
         );
