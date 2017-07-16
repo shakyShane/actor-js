@@ -1,9 +1,14 @@
 import {Subscription} from 'rxjs';
-import {reduxObservable} from './redux-observable';
+import {mappedMethods} from './mapped-methods';
 import {receive} from './receive';
 import {askMany} from './askMany';
+
+// export enum Patterns {
+//     MappedMethods = 'MappedMethods'
+// }
+
 export {
-    reduxObservable,
+    mappedMethods,
     receive,
     askMany,
 }

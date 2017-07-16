@@ -18,7 +18,7 @@ import {Subscription} from "rxjs/Subscription";
 import {createDefaultMailbox} from "./createDefaultMailbox";
 import {setMaxListeners} from "cluster";
 import * as patterns from './patterns';
-import {IRespondableStream} from "./patterns/redux-observable";
+import {IRespondableStream} from "./patterns/mapped-methods";
 const logger = debug('acjs:System');
 const lifecycleLogger = debug('acjs:lifecycle');
 const messageLogger = debug('acjs:message');
@@ -125,6 +125,9 @@ export class System {
 
         if (actor.receive) {
             patterns.receive(actor, context);
+        } else if (actor.methods) {
+            const match = patterns.mappedMethods;
+            match.call(null, actor, context);
         }
 
         return new ActorRef(actor.address, this);

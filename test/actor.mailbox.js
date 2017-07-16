@@ -44,8 +44,7 @@ describe('mailboxes', function() {
                                 return Rx.Observable.of(respond(payload)).delay(1);
                             });
                     }
-                },
-                patterns: ['reduxObservable'],
+                }
             }
         };
 
