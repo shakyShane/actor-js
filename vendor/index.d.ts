@@ -15,13 +15,17 @@ type MessageId = string;
 
 interface IncomingMessage {
     messageID: MessageId
-    action: IOutgoingMessage
+    message: IOutgoingMessage
+}
+
+interface IAction {
+    type: string
+    payload?: any
 }
 
 interface IOutgoingMessage {
     address: string,
-    payload?: any
-    error?: boolean
+    action?: IAction
 }
 
 interface MessageResponse {

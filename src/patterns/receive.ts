@@ -15,21 +15,16 @@ export function receive(actor: Actor, context: IActorContext) {
 
     incoming
         .flatMap((incomingMessage: IncomingMessage) => {
-            const { address, payload } = incomingMessage.action;
+            const { address, action } = incomingMessage.message;
             const respId = incomingMessage.messageID;
 
             return Observable.create((obs: Observer<MessageResponse>) => {
 
-                const sender = {
-                    id: incomingMessage.messageID,
-                    reply: (response: any) => {
-                        obs.next({errors: [], response, respId});
-                    }
-                } as MessageSenderRef;
+                const respond = (response) => obs.next({errors: [], response, respId});
 
                 if (actor.receive) {
                     try {
-                        actor.receive(payload, incomingMessage, sender);
+                        actor.receive(action.type, action.payload, respond);
                     } catch(err) {
                         obs.next({errors: [err], response: null, respId});
                     }

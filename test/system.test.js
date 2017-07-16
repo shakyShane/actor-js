@@ -42,8 +42,8 @@ describe('system.actorOf', function() {
               this.actors      = [];
               this.context     = context;
           }
-          receive(payload) {
-              switch(payload) {
+          receive(name) {
+              switch(name) {
                   case 'init':
                       this.actors.push(
                           this.context.actorOf(Watcher, 'sub-path-01')
@@ -70,9 +70,8 @@ describe('system.actorOf', function() {
               this.type        = 'Watcher';
               this.address = address;
           }
-          // todo - sender here should also be an actor ref
-          receive(payload, message, sender) {
-              assert.equal(payload, 'Hey!');
+          receive(name) {
+              assert.equal(name, 'Hey!');
           }
       };
       const FileWatcher = class {
@@ -82,8 +81,8 @@ describe('system.actorOf', function() {
               this.actors      = [];
               this.context     = context;
           }
-          receive(payload, message, sender) {
-              switch(payload) {
+          receive(name) {
+              switch(name) {
                   case 'init': {
                       this.actors.push(
                           this.context.actorOf(Watcher, 'sub-path-01')
@@ -112,9 +111,8 @@ describe('system.actorOf', function() {
               this.type        = 'GrandchildActor';
               this.address = address;
           }
-          // todo - sender here should also be an actor ref
-          receive(payload, message, sender) {
-              assert.equal(payload, 'Hey from the grandchild!');
+          receive(name) {
+              assert.equal(name, 'Hey from the grandchild!');
           }
       };
       const ChildActor = class {
@@ -127,8 +125,7 @@ describe('system.actorOf', function() {
               this.actors[0].tell('Hey from the grandchild!')
                   .subscribe();
           }
-          // todo - sender here should also be an actor ref
-          receive(payload, message, sender) {
+          receive(payload) {
               // console.log('Re'
           }
       };

@@ -13,8 +13,8 @@ describe('mailboxes', function() {
         const system = createSystem();
         const Child = function (address, context) {
             return {
-                receive(payload, incomingMessage, sender) {
-                    sender.reply('Hey!');
+                receive(payload, incomingMessage, reply) {
+                    reply('Hey!');
                 }
             }
         };
@@ -40,8 +40,8 @@ describe('mailboxes', function() {
                 methods: {
                     'shane': function(stream) {
                         return stream
-                            .switchMap(({action, respond}) => {
-                                return Rx.Observable.of(respond('HEY!')).delay(1);
+                            .switchMap(({payload, respond}) => {
+                                return Rx.Observable.of(respond(payload)).delay(1);
                             });
                     }
                 },
@@ -51,13 +51,13 @@ describe('mailboxes', function() {
 
         const actor = system.actorOf(Child);
         const calls = [];
-        actor.ask({type: 'shane', payload: '1'})
+        actor.ask('shane', '1')
             .subscribe(
                 x => console.log('1 next', x),
                 x => console.log('1 error', x),
                 x => calls.push('1 complete')
             );
-        actor.ask({type: 'shane', payload: '2'})
+        actor.ask('shane', '2')
             .subscribe(
                 x => calls.push('2 next'),
                 x => console.log('2 error', x),
@@ -112,7 +112,7 @@ describe('mailboxes', function() {
         const calls = [];
 
         const one = actorRef
-                .ask({type: 'effect-01', payload: '01'})
+                .ask('effect-01', '01')
                 .subscribe(
                     x => console.log('1 next', x),
                     x => console.log('1 error', x),
@@ -120,7 +120,7 @@ describe('mailboxes', function() {
                 );
 
         const two = actorRef
-                .ask({type: 'effect-01', payload: '02'})
+                .ask('effect-01', '02')
                 .subscribe(
                     x => console.log('2 next', x),
                     x => console.log('2 error', x),
@@ -128,7 +128,7 @@ describe('mailboxes', function() {
                 );
 
         const three = actorRef
-                .ask({type: 'effect-01', payload: '03'})
+                .ask('effect-01', '03')
                 .subscribe(
                     x => calls.push('3 next'),
                     x => console.log('3 error', x),

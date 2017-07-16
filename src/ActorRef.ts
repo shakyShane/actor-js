@@ -1,21 +1,22 @@
 import {System} from "./System";
 import {Observable} from 'rxjs';
+
 export class ActorRef {
 
     constructor(public address: string, private system: System) {}
 
-    ask(payload) {
+    ask(type: string, payload?: any) {
         const outgoing = {
             address: this.address,
-            payload
+            action: {type, payload}
         };
         return this.system.ask(outgoing);
     }
 
-    tell(payload) {
+    tell(type: string, payload?: any) {
         const outgoing = {
             address: this.address,
-            payload
+            action: {type, payload}
         };
         return this.system.tell(outgoing);
     }

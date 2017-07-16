@@ -15,11 +15,11 @@ describe('context.self', function () {
         const calls = [];
         const Child = function(address, context) {
             return {
-                receive(message) {
-                    if (message === 'first') {
+                receive(name) {
+                    if (name === 'first') {
                         context.self.tell('second').subscribe();
                     }
-                    if (message === 'second') {
+                    if (name === 'second') {
                         calls.push('second');
                     }
                 }

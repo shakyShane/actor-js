@@ -22,8 +22,8 @@ it('an actor can recover from a termination', function () {
             postRestart() {
                 calls.push(['postRestart', instanceCount]);
             },
-            receive(payload, message, sender) {
-                if (payload === 'error1') {
+            receive(name, payload, respond) {
+                if (name === 'error1') {
                     throw new Error('Something went wrong');
                 }
             }

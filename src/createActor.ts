@@ -9,7 +9,7 @@ export function createActor (factory, address: string, context): Actor {
 
 export interface Actor {
     type: string
-    receive?(payload, message, sender): void;
+    receive?(name: string, payload: any, respond: (response: any) => void): void;
     setupReceive?(mailbox): Observable<any>;
     _responses?: Observable<any>;
     postStart?(): void;

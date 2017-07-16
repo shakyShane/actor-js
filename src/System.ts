@@ -237,10 +237,10 @@ export class System {
      * the ask method is how actors post messages to each other
      * it's guaranteed to happen in an async manner
      * ask() sends a message asynchronously and returns a Future representing a possible reply. Also known as ask.
-     * @param action
+     * @param message
      * @param messageID
      */
-    public ask(action: IOutgoingMessage, messageID?: string): Observable<any> {
+    public ask(message: IOutgoingMessage, messageID?: string): Observable<any> {
         if (!messageID) messageID = uuid();
 
         const responses = this.responses
@@ -266,7 +266,7 @@ export class System {
             });
 
         const messageSender = Observable
-            .of({action, messageID}, this.messageScheduler)
+            .of({message, messageID}, this.messageScheduler)
             .do(x => messageLogger('ask outgoing ->', x))
             .do(message => this.arbiter.next(message));
 
@@ -276,11 +276,11 @@ export class System {
     /**
      * tell() means “fire-and-forget”, e.g. send a message asynchronously and return immediately. Also known as tell.
      */
-    public tell(action: IOutgoingMessage, messageID?: string): Observable<any> {
+    public tell(message: IOutgoingMessage, messageID?: string): Observable<any> {
 
         if (!messageID) messageID = uuid();
 
-        return Observable.of({action, messageID}, this.messageScheduler)
+        return Observable.of({message, messageID}, this.messageScheduler)
             .do(x => this.arbiter.next(x))
             .take(1);
     }
@@ -307,7 +307,7 @@ export class System {
             System.warnInvalidActorRef();
         }
         return Observable.concat(
-            this.ask({address: actorRef.address, payload: {type: 'stop'}}),
+            this.ask({address: actorRef.address, action: {type: 'stop'}}),
                 // .do(x => console.log('graceful stop OK', actorRef.address)),
             this.stopActor(actorRef),
             this.removeActor(actorRef)
@@ -319,7 +319,7 @@ export class System {
             System.warnInvalidActorRef();
         }
         return Observable.concat(
-            this.tell({address: actorRef.address, payload: 'stop'}),
+            this.tell({address: actorRef.address, action: {type: 'stop'}}),
             this.stopActor(actorRef),
             this.removeActor(actorRef)
         ).subscribe();
@@ -356,16 +356,17 @@ export class System {
     static filterByType(stream: Observable<IncomingMessage>, type: string): Observable<IncomingMessage> {
         return stream
             .filter((msg: IncomingMessage) => {
-                const { address, payload } = msg.action;
-                return payload.type === type;
+                const { address, action } = msg.message;
+                return action.type === type;
             })
     }
 
     static addResponse(stream: Observable<any>): Observable<any> {
         return stream.map((msg: IncomingMessage) => {
-            const { address, payload } = msg.action;
+            const { address, action } = msg.message;
             return {
-                action: payload,
+                type: action.type,
+                payload: action.payload,
                 respond: (resp: any) => {
                     return Object.assign({}, msg, {resp});
                 }
