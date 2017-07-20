@@ -6,6 +6,11 @@ import {Subscription} from 'rxjs';
 type EffectFn = (stream: Observable<IncomingMessage>) => Observable<any>;
 export type IRespondableStream = Observable<{respond: (reponse: any) => any, type: string, payload?:any}>
 
+export type IMethodStream<Payload, Response> = Observable<{
+    payload: Payload,
+    respond(response: Response): MessageResponse
+}>
+
 export function mappedMethods(actor: Actor, context: IActorContext) {
     const {methods} = actor;
     const {incoming} = actor.mailbox;
