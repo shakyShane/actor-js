@@ -14,14 +14,14 @@ even in single-threaded programming environments such as Javascript.
 
 - [x] `actor.tell()` - fire & forget message
 - [x] `actor.ask()` - ask & await async response from an actor
-- [ ] `actor.kill()` - send a message instructing an actor to terminate
+- [x] `actor.stop()` - send a message instructing an actor to terminate
 
 ### Actor context `ActorContext`
 - [x] `context.stop(IActorRef)` - allow an actor to be stopped via a ref
 - [x] `context.gracefulStop(IActorRef)` - allow an actor to be stopped via a ref with confirmation (for sequencing etc)
 - [x] `context.actorOf(IActorFactory)` - allow an actor to create more actors
 - [x] `context.parent` - allow an actor to access it's parent (in order to send it messages)
-- [x] `context.self` - allow an actor to access it's own ref (in order to send its self messages)
+- [x] `context.self` - allow an actor to access it's own ref (in order to send it's self messages)
 - [ ] `context.become(newHandler)` - designate a new handler for future messages [http://doc.akka.io/docs/akka/current/scala/actors.html#Graceful_Stop](http://doc.akka.io/docs/akka/current/scala/actors.html#Graceful_Stop)
 - [x] `context.actorSelection(lookup: string)` - allow actor lookups via paths, such as `/system` `/deadletter` etc
 
@@ -48,9 +48,9 @@ even in single-threaded programming environments such as Javascript.
     - [x] preStart is called on instance
     
 - Incarnation (restarting)
-    - [ ] preRestart called on old instance
+    - [x] preRestart called on old instance
     - [ ] new instance replaces old
-    - [ ] postRestart called on new instance
+    - [x] postRestart called on new instance
     
 - `Stop`, `context.stop()` or `PoisonPill`
     - [x] postStop is called on instance
