@@ -4,8 +4,8 @@
   "description": "Actor model (style) API in JS",
   "main": "dist/index.js",
   "devDependencies": {
-    "@types/rx": "4",
     "@types/node": "^8.0.14",
+    "@types/rx": "4",
     "browserify": "^14.1.0",
     "browserify-shim": "3.8.13",
     "chai": "^3.5.0",
@@ -27,7 +27,7 @@
     "serve-static": "^1.12.3",
     "source-map-support": "^0.4.14",
     "tslint": "^5.1.0",
-    "typescript": "^2.4.1",
+    "typescript": "^2.4.2",
     "typings": "^2.1.0",
     "uglify-js": "^2.8.14"
   },

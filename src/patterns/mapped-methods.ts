@@ -7,9 +7,10 @@ import {BehaviorSubject} from "rxjs/BehaviorSubject";
 type EffectFn = (stream: Observable<IncomingMessage>) => Observable<any>;
 export type IRespondableStream = Observable<{respond: (reponse: any) => any, type: string, payload?:any}>
 
-export type IMethodStream<Payload, Response> = Observable<{
+export type IMethodStream<Payload, Response, State> = Observable<{
     payload: Payload,
-    respond(response: Response): MessageResponse
+    state?: State,
+    respond(response: Response, State): MessageResponse
 }>
 
 function getInitialState(actor: Actor): any {
