@@ -365,17 +365,22 @@ export class System {
             })
     }
 
-    static addResponse(stream: Observable<any>): IRespondableStream {
-        return stream.map((msg: IncomingMessage) => {
-            const { address, action } = msg.message;
-            return {
-                type: action.type,
-                payload: action.payload,
-                respond: (resp: any) => {
-                    return Object.assign({}, msg, {resp});
+    static addResponse(stream: Observable<any>, state$?: BehaviorSubject<any>): IRespondableStream {
+        if (!state$) {
+            state$ = new BehaviorSubject(undefined);
+        }
+        return stream
+            .withLatestFrom(state$, (msg: IncomingMessage, state) => {
+                const { address, action } = msg.message;
+                return {
+                    type: action.type,
+                    payload: action.payload,
+                    respond: (resp: any, state?: any) => {
+                        return Object.assign({}, msg, {resp, state});
+                    },
+                    state,
                 }
-            }
-        })
+            })
     }
 
     static ofType(stream: Observable<any>, type: string): IRespondableStream {
@@ -384,10 +389,14 @@ export class System {
         );
     }
 
-    public cleanupCancelledMessages(stream, type: string, fn) {
+    public cleanupCancelledMessages(stream, type: string, fn, state$?) {
+
+        if (!state$) {
+            state$ = new BehaviorSubject(undefined);
+        }
 
         const filtered = System.filterByType(stream, type);
-        const output = fn(System.addResponse(filtered));
+        const output = fn(System.addResponse(filtered, state$));
 
         const collated = filtered.scan((acc, item) => {
             return acc.concat(item);

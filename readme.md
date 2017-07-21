@@ -28,6 +28,10 @@ even in single-threaded programming environments such as Javascript.
 ### Actor receive method
 - [x] `receive(payload, message, sender)`
 - [x] `sender.reply()` for replying directly to a message
+- [x] `mappedMethods` define 1 function per message name
+- [x] handle cancellation of pending message should a new one override it
+- [x] pass state into mapped methods for encapsulated state management
+
     ```js
     receive (payload message sender)
       switch payload

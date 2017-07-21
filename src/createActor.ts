@@ -20,6 +20,8 @@ export interface Actor {
     mailbox: Mailbox;
     patterns?: string[];
     methods?: {[methodName: string]: Method};
+    initialState?: any;
+    getInitialState?: any;
     _factoryMethod?: any;
 }
 

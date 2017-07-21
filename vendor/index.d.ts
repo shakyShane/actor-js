@@ -33,6 +33,7 @@ interface MessageResponse {
     response: any
     respId: string
     cancelled?: boolean
+    state?: any
 }
 
 type Method = (payload: any) => any;

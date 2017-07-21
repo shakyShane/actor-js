@@ -1,4 +1,5 @@
 import {Observable} from "rxjs/Observable";
+import {BehaviorSubject} from "rxjs/BehaviorSubject";
 
 export interface IActorContext {
     actorOf(factory: Function, address?: string): ActorRef
@@ -8,7 +9,8 @@ export interface IActorContext {
     cleanupCancelledMessages(
         stream: Observable<IncomingMessage>,
         type: string,
-        fn: (filteredStream: Observable<IncomingMessage>) => Observable<MessageResponse>
+        fn: (filteredStream: Observable<IncomingMessage>) => Observable<MessageResponse>,
+        state$: BehaviorSubject<any>
     )
     parent: ActorRef
     self: ActorRef
