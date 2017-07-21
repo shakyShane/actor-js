@@ -10,7 +10,7 @@ export type IRespondableStream = Observable<{respond: (reponse: any) => any, typ
 export type IMethodStream<Payload, Response, State> = Observable<{
     payload: Payload,
     state?: State,
-    respond(response: Response, State): MessageResponse
+    respond(response: Response, state?: State): MessageResponse
 }>
 
 function getInitialState(actor: Actor): any {
