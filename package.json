@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "devDependencies": {
     "@types/rx": "4",
+    "@types/node": "^8.0.14",
     "browserify": "^14.1.0",
     "browserify-shim": "3.8.13",
     "chai": "^3.5.0",
