@@ -42,4 +42,37 @@ describe('actor.ask', function() {
             done();
         });
     });
+    it.only('can handle a type without payload', function (done) {
+        const system = createSystem();
+        const actor = system.actorOf(function() {
+            return {
+                receive(name, payload, respond, sender) {
+                    respond('All good');
+                    let count = 0;
+                    const int = setInterval(() => {
+                        count++;
+                        if (count === payload) {
+                            return clearInterval(int);
+                        }
+                        sender.tell('sup').subscribe();
+                    }, 10);
+                }
+            }
+        }, 'first');
+
+        const actor2 = system.actorOf(function(address, context) {
+            return {
+                receive(name, payload, respond, sender) {
+                    if (name === 'start') {
+                        const first = context.actorSelection('/system/first')[0];
+                        first.ask('Hi!', 2).subscribe();
+                    } else {
+                        console.log(name);
+                    }
+                }
+            }
+        });
+
+        actor2.tell('start').subscribe();
+    });
 });
