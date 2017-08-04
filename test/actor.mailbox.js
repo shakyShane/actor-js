@@ -72,7 +72,7 @@ describe('mailboxes', function() {
             );
     });
 
-    it('an actor can implement switchMap for duplicate messages', function (done) {
+    it.skip('an actor can implement switchMap for duplicate messages', function (done) {
         const system = createSystem();
 
         const Child = function (address, context) {

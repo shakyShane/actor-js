@@ -3,10 +3,11 @@ import {Observable} from 'rxjs';
 
 export class ActorRef {
 
-    constructor(public address: string, private system: System) {}
+    constructor(public address: string, private system: System, public contextCreator?: string) {}
 
     ask(type: string, payload?: any) {
         const outgoing = {
+            contextCreator: this.contextCreator,
             address: this.address,
             action: {type, payload}
         };
@@ -15,6 +16,7 @@ export class ActorRef {
 
     tell(type: string, payload?: any) {
         const outgoing = {
+            contextCreator: this.contextCreator,
             address: this.address,
             action: {type, payload}
         };

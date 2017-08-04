@@ -63,14 +63,14 @@ export class System {
      * @param address
      * @returns {ActorRef}
      */
-    public actorOf(actorFactory: any, address?: string): ActorRef {
+    public actorOf(actorFactory: any, address?: string, contextCreator?: string): ActorRef {
 
         const actorAddress = this.createActorAddress(address);
         const context      = this.createContext(actorAddress);
         const actor        = this.createActor(actorFactory, actorAddress, context);
         const decorated    = this.decorateActor(actor, actorAddress, actorFactory);
 
-        return this.initActor(decorated, context, actorAddress, actorFactory);
+        return this.initActor(decorated, context, actorAddress, actorFactory, contextCreator);
     }
 
     public decorateActor(actor, address, factory) {
@@ -86,7 +86,7 @@ export class System {
         return actor;
     }
 
-    public initActor(actor: Actor, context, address, factory): ActorRef {
+    public initActor(actor: Actor, context, address, factory, contextCreator: string): ActorRef {
 
         if (actor.preStart) {
             lifecycleLogger('preStart', address);
@@ -124,13 +124,13 @@ export class System {
         }
 
         if (actor.receive) {
-            patterns.receive(actor, context);
+            patterns.receive(actor, context, this);
         } else if (actor.methods) {
             const match = patterns.mappedMethods;
             match.call(null, actor, context);
         }
 
-        return new ActorRef(actor.address, this);
+        return new ActorRef(actor.address, this, contextCreator);
     }
 
     public reincarnate(address, _factoryMethod): Observable<any> {
@@ -164,10 +164,11 @@ export class System {
         // strip any trailing slashes
         const stripped = lookup.replace(/\/$/, '');
         const matcher  = anymatch(path.join(stripped));
+        const contextCreator = prefix;
 
         return addresses
             .filter(matcher)
-            .map(address => new ActorRef(address, this));
+            .map(address => new ActorRef(address, this, contextCreator));
     }
 
     private stopActor(actorRef: ActorRef): Observable<any> {
@@ -227,7 +228,7 @@ export class System {
                 if (!localAddress) {
                     localAddress = uuid();
                 }
-                return bound(factory, [prefix, localAddress].join('/'));
+                return bound(factory, [prefix, localAddress].join('/'), parentAddress);
             },
             actorSelection(search): ActorRef[] {
                 return boundSelection(search, parentAddress);
@@ -365,13 +366,14 @@ export class System {
             })
     }
 
-    static addResponse(stream: Observable<any>, state$?: BehaviorSubject<any>): IRespondableStream {
+    static addResponse(stream: Observable<any>, state$: BehaviorSubject<any>, system: System): IRespondableStream {
         if (!state$) {
             state$ = new BehaviorSubject(undefined);
         }
         return stream
             .withLatestFrom(state$, (msg: IncomingMessage, state) => {
-                const { address, action } = msg.message;
+                const { address, action, contextCreator } = msg.message;
+                const sender = new ActorRef(contextCreator, system);
                 return {
                     type: action.type,
                     payload: action.payload,
@@ -379,15 +381,16 @@ export class System {
                         return Object.assign({}, msg, {resp, state});
                     },
                     state,
+                    sender,
                 }
             })
     }
 
-    static ofType(stream: Observable<any>, type: string): IRespondableStream {
-        return System.addResponse(
-            System.filterByType(stream, type)
-        );
-    }
+    // static ofType(stream: Observable<any>, type: string): IRespondableStream {
+    //     return System.addResponse(
+    //         System.filterByType(stream, type)
+    //     );
+    // }
 
     public cleanupCancelledMessages(stream, type: string, fn, state$?) {
 
@@ -396,7 +399,7 @@ export class System {
         }
 
         const filtered = System.filterByType(stream, type);
-        const output = fn(System.addResponse(filtered, state$));
+        const output = fn(System.addResponse(filtered, state$, this));
 
         const collated = filtered.scan((acc, item) => {
             return acc.concat(item);

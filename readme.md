@@ -31,6 +31,7 @@ even in single-threaded programming environments such as Javascript.
 - [x] `mappedMethods` define 1 function per message name
 - [x] handle cancellation of pending message should a new one override it
 - [x] pass state into mapped methods for encapsulated state management
+- [x] `sender` - allow every message access to an ActorRef that allow communication with the sender
 
     ```js
     receive (payload message sender)
@@ -53,7 +54,7 @@ even in single-threaded programming environments such as Javascript.
     
 - Incarnation (restarting)
     - [x] preRestart called on old instance
-    - [ ] new instance replaces old
+    - [x] new instance replaces old
     - [x] postRestart called on new instance
     
 - `Stop`, `context.stop()` or `PoisonPill`

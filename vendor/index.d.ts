@@ -26,6 +26,7 @@ interface IAction {
 interface IOutgoingMessage {
     address: string,
     action?: IAction
+    contextCreator?: string
 }
 
 interface MessageResponse {
