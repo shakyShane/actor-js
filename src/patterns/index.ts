@@ -1,14 +1,13 @@
 import {Subscription} from 'rxjs';
-import {mappedMethods} from './mapped-methods';
+import {mappedMethods, IMethodStream} from './mapped-methods';
 import {receive} from './receive';
 import {askMany} from './askMany';
-
-// export enum Patterns {
-//     MappedMethods = 'MappedMethods'
-// }
+import {createResponse} from './createResponse';
 
 export {
     mappedMethods,
+    IMethodStream,
     receive,
     askMany,
+    createResponse,
 }

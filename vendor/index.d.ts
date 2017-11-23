@@ -37,4 +37,10 @@ interface MessageResponse {
     state?: any
 }
 
+interface OutgoingResponseFromStream {
+    messageID: string,
+    resp: any,
+    state?: any,
+}
+
 type Method = (payload: any) => any;

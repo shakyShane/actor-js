@@ -46,7 +46,7 @@ export function mappedMethods(actor: Actor, context: IActorContext) {
                     })
             }, state$)
         })
-        .map((incomingMessage: any): MessageResponse => {
+        .map((incomingMessage: OutgoingResponseFromStream): MessageResponse => {
             return {
                 errors: [],
                 response: (incomingMessage as any).resp,

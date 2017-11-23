@@ -4,6 +4,7 @@
   "description": "Actor model (style) API in JS",
   "main": "dist/index.js",
   "devDependencies": {
+    "@kwonoj/rxjs-testscheduler-compat": "^1.0.2",
     "@types/rx": "4",
     "browserify": "^14.1.0",
     "browserify-shim": "3.8.13",

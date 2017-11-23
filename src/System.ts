@@ -103,11 +103,11 @@ export class System {
         if (actor.setupReceive) {
             lifecycleLogger('setupReceive', address);
             actor.setupReceive(actor.mailbox.incoming)
-                .map(incomingMessage => {
+                .map((incomingMessage: OutgoingResponseFromStream): MessageResponse => {
                     return {
                         errors: [],
                         response: (incomingMessage as any).resp,
-                        respId: incomingMessage.messageID
+                        respId: incomingMessage.messageID,
                     }
                 })
                 .do(x => actor.mailbox.outgoing.next(x))
@@ -234,7 +234,8 @@ export class System {
                 return boundSelection(search, parentAddress);
             },
             stop: boundStop,
-            gracefulStop: gracefulStop
+            gracefulStop: gracefulStop,
+            scheduler: this.messageScheduler,
         }
     }
 

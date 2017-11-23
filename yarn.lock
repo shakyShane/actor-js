@@ -2,6 +2,10 @@
 # yarn lockfile v1
 
 
+"@kwonoj/rxjs-testscheduler-compat@^1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@kwonoj/rxjs-testscheduler-compat/-/rxjs-testscheduler-compat-1.0.2.tgz#8f08e6e303b272f10b6657d86f2e0e964338bc21"
+
 "@types/rx-core-binding@*":
   version "4.0.3"
   resolved "https://registry.yarnpkg.com/@types/rx-core-binding/-/rx-core-binding-4.0.3.tgz#74261d1df5ab9eafa697ed9e8243999787cc87ae"
