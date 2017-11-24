@@ -3,6 +3,7 @@ import {IActorContext} from "../ActorContext";
 import {Actor} from "../createActor";
 import {Subscription} from 'rxjs';
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
+import {IncomingMessage, MessageResponse, OutgoingResponseFromStream} from "../types";
 
 type EffectFn = (stream: Observable<IncomingMessage>) => Observable<any>;
 export type IRespondableStream = Observable<{respond: (reponse: any) => any, type: string, payload?:any}>

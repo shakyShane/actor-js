@@ -4,6 +4,7 @@ import {IActorContext} from "../ActorContext";
 import {Actor} from "../createActor";
 import {Subscription} from 'rxjs';
 import {ActorRef} from "../ActorRef";
+import {IncomingMessage, MessageResponse} from "../types";
 
 export interface MessageSenderRef {
     id: string,

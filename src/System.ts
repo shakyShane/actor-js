@@ -20,6 +20,8 @@ import {createDefaultMailbox} from "./createDefaultMailbox";
 import {setMaxListeners} from "cluster";
 import * as patterns from './patterns';
 import {IRespondableStream} from "./patterns/mapped-methods";
+import {IncomingMessage, IOutgoingMessage, MessageResponse, OutgoingResponseFromStream} from "./types";
+
 const logger = debug('acjs:System');
 const lifecycleLogger = debug('acjs:lifecycle');
 const messageLogger = debug('acjs:message');

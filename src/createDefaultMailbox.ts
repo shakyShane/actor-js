@@ -3,6 +3,7 @@ import {Mailbox} from "./getMailbox";
 import {Subject} from "rxjs/Subject";
 import {Observable} from "rxjs/Observable";
 import {Observer} from "rxjs/Observer";
+import {IncomingMessage, MessageResponse} from "./types";
 
 export interface MessageSenderRef {
     id: string,

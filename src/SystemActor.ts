@@ -1,4 +1,5 @@
 import {IActorContext} from "./ActorContext";
+import {IncomingMessage} from "./types";
 
 export interface IActorFactory {
     mailboxType: string;

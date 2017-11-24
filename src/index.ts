@@ -14,6 +14,7 @@ import {Subscription} from 'rxjs';
 import {IActorContext} from './ActorContext';
 const logger = debug('staunch');
 import * as patterns from './patterns'
+import {IncomingMessage, MessageResponse} from "./types";
 
 const log = (ns) => (message) => logger(`${ns}`, message);
 

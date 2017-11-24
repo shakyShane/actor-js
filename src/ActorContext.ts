@@ -1,6 +1,7 @@
 import {Observable} from "rxjs/Observable";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
 import {IScheduler} from "rxjs/Scheduler";
+import {ActorRef, IncomingMessage, MessageResponse} from "./types";
 
 export interface IActorContext {
     actorOf(factory: Function, address?: string): ActorRef

@@ -1,4 +1,5 @@
 import {Actor} from "./createActor";
+import {ActorRef} from "./types";
 
 export interface IActorRegister {
     [address: string]: Actor

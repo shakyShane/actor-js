@@ -3,6 +3,7 @@ import {createDefaultMailbox} from "./createDefaultMailbox";
 // import {createStateMailbox} from "./createStateMailbox";
 import {Observable} from "rxjs/Observable";
 import {Subject} from 'rxjs/Subject';
+import {IncomingMessage, MessageResponse} from "./types";
 
 export default function getMailbox(actor, type: MailboxType, system): Mailbox {
     if (type === 'default') {

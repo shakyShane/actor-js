@@ -1,3 +1,5 @@
+import {IncomingMessage, OutgoingResponseFromStream} from "../types";
+
 export function createResponse(incoming: IncomingMessage, outgoing: any): OutgoingResponseFromStream {
     return {
         messageID: incoming.messageID,
