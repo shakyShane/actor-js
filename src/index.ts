@@ -19,6 +19,7 @@ const log = (ns) => (message) => logger(`${ns}`, message);
 
 export interface ICreateOptions {
     messageScheduler?: IScheduler
+    timeScheduler?: IScheduler
     factory?: IActorFactory
 }
 

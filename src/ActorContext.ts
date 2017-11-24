@@ -6,6 +6,8 @@ export interface IActorContext {
     actorOf(factory: Function, address?: string): ActorRef
     actorSelection(search): ActorRef[]
     scheduler: IScheduler;
+    messageScheduler: IScheduler;
+    timeScheduler: IScheduler;
     gracefulStop(actorRefs: ActorRef|ActorRef[]): Observable<any>
     stop(ActorRef): void
     cleanupCancelledMessages(

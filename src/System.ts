@@ -10,6 +10,7 @@ import {ActorRef} from "./ActorRef";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
 import {Subject} from "rxjs/Subject";
 import {async as asyncScheduler} from "rxjs/scheduler/async";
+import {asap as asapScheduler} from "rxjs/scheduler/asap";
 import {ICreateOptions} from "./index";
 import {IScheduler} from "rxjs/Scheduler";
 import {IActorContext} from "./ActorContext";
@@ -38,6 +39,7 @@ export class System {
     public arbiter: Subject<IncomingMessage>;
     public address = '/system';
     public messageScheduler: IScheduler;
+    public timeScheduler: IScheduler;
 
     constructor(opts: ICreateOptions) {
         // global actorRegister of available actors
@@ -54,6 +56,7 @@ export class System {
         this.arbiter        = new Subject<IncomingMessage>();
         //
         this.messageScheduler = opts.messageScheduler || asyncScheduler;
+        this.timeScheduler    = opts.timeScheduler || asapScheduler;
     }
 
     /**
@@ -236,6 +239,8 @@ export class System {
             stop: boundStop,
             gracefulStop: gracefulStop,
             scheduler: this.messageScheduler,
+            messageScheduler: this.messageScheduler,
+            timeScheduler: this.timeScheduler,
         }
     }
 
