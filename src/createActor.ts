@@ -2,7 +2,8 @@ import {Mailbox, MailboxType} from "./getMailbox";
 import {Effect, System} from "./System";
 import {Observable} from "rxjs/Observable";
 import uuid = require('uuid/v4');
-import {ActorRef, IncomingMessage, Method} from "./types";
+import {ActorRef, IncomingMessage, Method, OutgoingResponseFromStream} from "./types";
+import {Subject} from "rxjs/Subject";
 
 export function createActor (factory, address: string, context): Actor {
     return new factory(address, context);
@@ -11,7 +12,7 @@ export function createActor (factory, address: string, context): Actor {
 export interface Actor {
     type: string
     receive?(name: string, payload: any, respond: (response: any) => void, sender?: ActorRef): void;
-    setupReceive?(mailbox): Observable<any>;
+    setupReceive?(mailbox: Subject<IncomingMessage>): Observable<OutgoingResponseFromStream>;
     _responses?: Observable<any>;
     postStart?(): void;
     preStart?(): void;
