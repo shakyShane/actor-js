@@ -1,5 +1,4 @@
-import {Observable} from "rxjs/Observable";
-import "rxjs/add/observable/merge";
+import {Observable} from "rxjs";
 import {Actor, createActor} from './createActor';
 import {createStateActor} from './createStateActor';
 import getMailbox from "./getMailbox";
@@ -9,12 +8,13 @@ import {System} from "./System";
 import {IScheduler} from "rxjs/Scheduler";
 import {IActorFactory, SystemActor} from "./SystemActor";
 import {IActorRegister, addActor, removeActor} from "./ActorRegister";
-import {ActorRef} from "./ActorRef";
+import {ActorRef as ActorRefFn} from "./ActorRef";
 import {Subscription} from 'rxjs';
 import {IActorContext} from './ActorContext';
 const logger = debug('staunch');
 import * as patterns from './patterns'
-import {IncomingMessage, MessageResponse} from "./types";
+import {IncomingMessage, MessageResponse, ActorRef} from "./types";
+import {IMethodStream, IRespondableStream} from "./patterns/mapped-methods";
 
 const log = (ns) => (message) => logger(`${ns}`, message);
 
@@ -60,7 +60,7 @@ export function createSystem(opts: ICreateOptions = {}): System {
                     const factory = actor._factoryMethod;
                     return Observable.concat(
                         system.restartActor(actor),
-                        system.removeActor(new ActorRef(actor.address, system)),
+                        system.removeActor(new ActorRefFn(actor.address, system)),
                         system.reincarnate(address, factory)
                     ).subscribe();
                 }
@@ -103,4 +103,12 @@ export {
     createActor,
     createStateActor,
     patterns,
+    MessageResponse,
+    IncomingMessage,
+    IMethodStream,
+    IActorContext,
+    IRespondableStream,
+    ActorRef,
+    System,
+    SystemActor
 };

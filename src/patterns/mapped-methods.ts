@@ -1,4 +1,4 @@
-import {Observable} from "rxjs/Observable";
+import {Observable} from "rxjs";
 import {IActorContext} from "../ActorContext";
 import {Actor} from "../createActor";
 import {Subscription} from 'rxjs';
