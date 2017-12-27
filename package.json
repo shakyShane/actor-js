@@ -39,7 +39,10 @@
     "test": "cb test",
     "prepublish": "cb test"
   },
-  "keywords": [],
+  "repository": "shakyShane/actor-js",
+  "keywords": [
+    "actor model"
+  ],
   "author": "",
   "license": "ISC",
   "browserify": {
