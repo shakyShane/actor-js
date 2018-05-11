@@ -1,26 +1,23 @@
-import {Observable} from "rxjs";
+import {Observable, Scheduler, merge, concat} from "rxjs";
+import {scan, map, mergeMap, filter, tap, withLatestFrom} from 'rxjs/operators';
 import {Actor, createActor} from './createActor';
 import {createStateActor} from './createStateActor';
-import getMailbox from "./getMailbox";
-import uuid = require('uuid/v4');
 import debug = require('debug');
 import {System} from "./System";
-import {IScheduler} from "rxjs/Scheduler";
 import {IActorFactory, SystemActor} from "./SystemActor";
-import {IActorRegister, addActor, removeActor} from "./ActorRegister";
+import {addActor, removeActor} from "./ActorRegister";
 import {ActorRef as ActorRefFn} from "./ActorRef";
-import {Subscription} from 'rxjs';
 import {IActorContext} from './ActorContext';
-const logger = debug('staunch');
 import * as patterns from './patterns'
 import {IncomingMessage, MessageResponse, ActorRef} from "./types";
 import {IMethodStream, IRespondableStream} from "./patterns/mapped-methods";
+const logger = debug('aktor-js');
 
 const log = (ns) => (message) => logger(`${ns}`, message);
 
 export interface ICreateOptions {
-    messageScheduler?: IScheduler
-    timeScheduler?: IScheduler
+    messageScheduler?: Scheduler
+    timeScheduler?: Scheduler
     factory?: IActorFactory
 }
 
@@ -32,25 +29,26 @@ export function createSystem(opts: ICreateOptions = {}): System {
 
     // Create a global actorRegister containing actors by address
 
-    Observable.merge(
-        system.incomingActors.map((incoming) => ({
+    merge(
+        system.incomingActors.pipe(map((incoming) => ({
             actor: incoming,
             fn: addActor as RegisterFn
-        })),
-        system.outgoingActors.map((incoming) => ({
+        }))),
+        system.outgoingActors.pipe(map((incoming) => ({
             actor: incoming,
             fn: removeActor as RegisterFn
-        })),
-    )
-        .scan(function (acc, {actor, fn}) {
+        }))),
+    ).pipe(
+        scan((acc, {actor, fn}: {actor: Actor|ActorRef, fn: Function}) => {
             return fn(acc, actor);
-        }, {} as IActorRegister)
+        }, {})
+    )
         .subscribe(system.actorRegister);
 
     // for each registered mailbox, subscribe to
     // it's outgoing messages and pump the output
     // into the 'responses' stream
-    system.incomingActors.flatMap((actor) => {
+    system.incomingActors.pipe(mergeMap((actor) => {
         return actor
             .mailbox
             .outgoing
@@ -58,21 +56,21 @@ export function createSystem(opts: ICreateOptions = {}): System {
                 if (incoming.errors.length) {
                     const address = actor.address;
                     const factory = actor._factoryMethod;
-                    return Observable.concat(
+                    return concat(
                         system.restartActor(actor),
                         system.removeActor(new ActorRefFn(actor.address, system)),
                         system.reincarnate(address, factory)
                     ).subscribe();
                 }
             })
-    })
+    }))
         .subscribe(x => system.responses.next(x as any));
 
     // the arbiter takes all incoming messages throughout
     // the entire system and distributes them as needed into
     // the correct mailboxes
-    system.arbiter
-        .withLatestFrom(system.actorRegister, function ({message, messageID}, register) {
+    system.arbiter.pipe(
+        withLatestFrom(system.actorRegister, function ({message, messageID}, register) {
             const [ name ] = message.address.split('.');
             const actor = register[name];
             return {
@@ -84,13 +82,14 @@ export function createSystem(opts: ICreateOptions = {}): System {
                 messageID
             }
         })
-        .filter(x => {
+        , filter(x => {
             return x.actor && x.mailbox;
         })
-        .do(x => {
+        , tap(x => {
             const incomingMessage : IncomingMessage = {message: x.message, messageID: x.messageID};
             x.mailbox.incoming.next(incomingMessage);
         })
+    )
         .subscribe();
 
     // register the /system actor

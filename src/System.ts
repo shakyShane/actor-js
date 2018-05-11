@@ -1,20 +1,13 @@
 import {Actor, StateActor} from "./createActor";
-import {Observable} from 'rxjs/Observable';
-import './rx';
+import {Observable, Subject, BehaviorSubject, asyncScheduler, asapScheduler, Scheduler} from 'rxjs';
 
 import debug = require('debug');
 import uuid = require('uuid/v4');
 import path = require('path');
 import anymatch = require('anymatch');
 import {ActorRef} from "./ActorRef";
-import {BehaviorSubject} from "rxjs/BehaviorSubject";
-import {Subject} from "rxjs/Subject";
-import {async as asyncScheduler} from "rxjs/scheduler/async";
-import {asap as asapScheduler} from "rxjs/scheduler/asap";
 import {ICreateOptions} from "./index";
-import {IScheduler} from "rxjs/Scheduler";
 import {IActorContext} from "./ActorContext";
-import Disposable = Rx.Disposable;
 import {Subscription} from "rxjs/Subscription";
 import {createDefaultMailbox} from "./createDefaultMailbox";
 import {setMaxListeners} from "cluster";
@@ -40,8 +33,8 @@ export class System {
     public mailboxes: BehaviorSubject<any>;
     public arbiter: Subject<IncomingMessage>;
     public address = '/system';
-    public messageScheduler: IScheduler;
-    public timeScheduler: IScheduler;
+    public messageScheduler: Scheduler;
+    public timeScheduler: Scheduler;
 
     constructor(opts: ICreateOptions) {
         // global actorRegister of available actors

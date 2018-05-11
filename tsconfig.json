@@ -8,8 +8,6 @@
     "lib": [ "es6", "dom" ]
   },
   "include": [
-    "typings/index.d.ts",
-    "vendor/index.d.ts",
     "src/**/*.ts"
   ]
 }
