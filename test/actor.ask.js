@@ -1,11 +1,6 @@
 require('source-map-support').install();
 const { assert } = require('chai');
-const Rx = require('rxjs');
 const { createSystem } = require('../');
-const { TestScheduler } = require('rxjs');
-const { SystemActor } = require('../dist/SystemActor');
-const { System } = require('../dist/System');
-const { patterns } = require('../dist');
 
 describe('actor.ask', function() {
     it('can ask an actor for a response', function (done) {

@@ -1,7 +1,7 @@
 require('source-map-support').install();
 const { assert } = require('chai');
 const { createSystem } = require('../');
-const { TestScheduler } = require('rxjs');
+const { TestScheduler } = require('rxjs/testing/TestScheduler');
 
 describe('system.actorOf', function() {
 

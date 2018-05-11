@@ -1,5 +1,5 @@
 import {Observable, Observer} from "rxjs";
-import {mergeMap, tap} from "rxjs/operators";
+import {mergeMap, tap, take} from "rxjs/operators";
 import {IActorContext} from "../ActorContext";
 import {Actor} from "../createActor";
 import {ActorRef} from "../ActorRef";
@@ -31,8 +31,7 @@ export function receive(actor: Actor, context: IActorContext, system) {
                         obs.next({errors: [err], response: null, respId});
                     }
                 }
-
-            }).take(1);
+            }).pipe(take(1));
         })
         , tap((x: MessageResponse) => actor.mailbox.outgoing.next(x))
     ).subscribe();

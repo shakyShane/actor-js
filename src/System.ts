@@ -425,12 +425,11 @@ export class System {
             }, [] as IncomingMessage[])
         );
 
-        return output
-            // .take(1)
-            .withLatestFrom(collated, (out, all) => {
+        return output.pipe(
+            withLatestFrom(collated, (out, all) => {
                 const toCancel = all
                     .filter(x => {
-                        return x.messageID !== out.messageID;
+                        return x.messageID !== (out as any).messageID;
                     })
                     .map((msg: IncomingMessage) => {
                         return Object.assign(
@@ -446,6 +445,8 @@ export class System {
                 });
 
                 return out;
-            });
+            })
+        )
+            // .take(1)
     }
 }

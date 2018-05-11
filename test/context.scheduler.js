@@ -1,6 +1,6 @@
 require('source-map-support').install();
 const { assert } = require('chai');
-const Rx = require('rxjs');
+const {delay, map, tap} = require('rxjs/operators');
 const { createSystem } = require('../');
 const { TestScheduler } = require('@kwonoj/rxjs-testscheduler-compat');
 const { SystemActor } = require('../dist/SystemActor');
@@ -17,10 +17,11 @@ describe('context.scheduler', function () {
         const Child = function(address, context) {
             return {
                 setupReceive(stream) {
-                    return stream
-                        .delay(2000, context.scheduler)
-                        .map(original => patterns.createResponse(original, 'shane'))
-                        .do(x => calls.push(x.resp))
+                    return stream.pipe(
+                        delay(2000, context.scheduler)
+                        , map(original => patterns.createResponse(original, 'shane'))
+                        , tap(x => calls.push(x.resp))
+                    );
                 }
             }
         };

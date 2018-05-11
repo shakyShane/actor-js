@@ -2,7 +2,7 @@
 // const { assert } = require('chai');
 // const Rx = require('rxjs');
 // const { createSystem } = require('../');
-// const { TestScheduler } = require('rxjs');
+// const { TestScheduler } = require('rxjs/testing/TestScheduler');
 // const { SystemActor } = require('../dist/SystemActor');
 // const { System } = require('../dist/System');
 //

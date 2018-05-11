@@ -1,3 +1,4 @@
+require('source-map-support').install();
 const {Observable} = require('rxjs');
 const ajs = require('./');
 const request = require('request');
@@ -6,9 +7,18 @@ const watcherGuardian = require('./fixtures/watcherGuardian');
 const serveStatic = require('./fixtures/serveStatic');
 
 const system  = ajs.createSystem();
-const server  = system.actorOf(createServer);
-const watcher = system.actorOf(watcherGuardian);
-const ss      = system.actorOf(serveStatic);
+const server  = system.actorOf(function() {
+    return {
+        receive: (msg) => {
+            console.log(msg);
+        }
+    }
+});
+
+server.tell('yo!').subscribe();
+
+// const watcher = system.actorOf(watcherGuardian);
+// const ss      = system.actorOf(serveStatic);
 
 
 // ss.ask({type: 'init', payload: ['test', 'src', {route: '/shane', dir: 'web'}]})
