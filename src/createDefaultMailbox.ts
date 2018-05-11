@@ -1,8 +1,6 @@
 import {Actor} from "./createActor";
 import {Mailbox} from "./getMailbox";
-import {Subject} from "rxjs/Subject";
-import {Observable} from "rxjs/Observable";
-import {Observer} from "rxjs/Observer";
+import {Subject, Observable, Observer} from "rxjs";
 import {IncomingMessage, MessageResponse} from "./types";
 
 export interface MessageSenderRef {

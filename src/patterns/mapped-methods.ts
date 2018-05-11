@@ -1,12 +1,12 @@
-import {Observable} from "rxjs";
+import {EMPTY, Observable} from "rxjs";
 import {IActorContext} from "../ActorContext";
 import {Actor} from "../createActor";
-import {Subscription} from 'rxjs';
-import {BehaviorSubject} from "rxjs/BehaviorSubject";
+import {BehaviorSubject, from, Subscription} from "rxjs";
 import {IncomingMessage, MessageResponse, OutgoingResponseFromStream} from "../types";
+import {catchError, map, mergeMap, tap} from "rxjs/internal/operators";
 
 type EffectFn = (stream: Observable<IncomingMessage>) => Observable<any>;
-export type IRespondableStream = Observable<{respond: (reponse: any) => any, type: string, payload?:any}>
+export type IRespondableStream = Observable<{respond: (response: any) => any, type: string, payload?:any}>
 
 export type IMethodStream<Payload, Response, State> = Observable<{
     payload: Payload,
@@ -34,20 +34,21 @@ export function mappedMethods(actor: Actor, context: IActorContext) {
         throw new Error('Missing `methods` for reduxObservable pattern');
     }
 
-    return Observable.from(Object.keys(methods))
-        .flatMap(key => {
+    return from(Object.keys(methods)).pipe(
+        mergeMap(key => {
             const fn: EffectFn = methods[key];
             return context.cleanupCancelledMessages(incoming, key, function(stream) {
-                return fn(stream)
-                    .catch((e: any): any => {
+                return fn(stream).pipe(
+                    catchError((e: any): any => {
                         console.log(`Uncaught error from '${fn.name}'`);
                         console.log(`Be sure to handle errors in '${fn.name}'`);
                         console.error(e);
-                        return Observable.empty();
+                        return EMPTY;
                     })
+                )
             }, state$)
         })
-        .map((incomingMessage: OutgoingResponseFromStream): MessageResponse => {
+        , map((incomingMessage: OutgoingResponseFromStream): MessageResponse => {
             return {
                 errors: [],
                 response: (incomingMessage as any).resp,
@@ -55,7 +56,7 @@ export function mappedMethods(actor: Actor, context: IActorContext) {
                 state: (incomingMessage as any).state,
             }
         })
-        .do(x => actor.mailbox.outgoing.next(x))
-        .do(x => state$.next(x.state))
-        .subscribe();
+        , tap(x => actor.mailbox.outgoing.next(x))
+        , tap(x => state$.next(x.state))
+    ).subscribe();
 }

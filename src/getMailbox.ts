@@ -1,8 +1,6 @@
-import Rx = require('rx');
 import {createDefaultMailbox} from "./createDefaultMailbox";
 // import {createStateMailbox} from "./createStateMailbox";
-import {Observable} from "rxjs/Observable";
-import {Subject} from 'rxjs/Subject';
+import {Observable, Subject} from "rxjs";
 import {IncomingMessage, MessageResponse} from "./types";
 
 export default function getMailbox(actor, type: MailboxType, system): Mailbox {

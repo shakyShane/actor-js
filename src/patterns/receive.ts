@@ -1,8 +1,7 @@
-import {Observable} from "rxjs/Observable";
-import {Observer} from "rxjs/Observer";
+import {Observable, Observer} from "rxjs";
+import {mergeMap, tap} from "rxjs/operators";
 import {IActorContext} from "../ActorContext";
 import {Actor} from "../createActor";
-import {Subscription} from 'rxjs';
 import {ActorRef} from "../ActorRef";
 import {IncomingMessage, MessageResponse} from "../types";
 
@@ -15,8 +14,8 @@ export function receive(actor: Actor, context: IActorContext, system) {
     const {methods} = actor;
     const {incoming} = actor.mailbox;
 
-    incoming
-        .flatMap((incomingMessage: IncomingMessage) => {
+    incoming.pipe(
+        mergeMap((incomingMessage: IncomingMessage) => {
             const { address, action, contextCreator } = incomingMessage.message;
             const respId = incomingMessage.messageID;
 
@@ -35,6 +34,6 @@ export function receive(actor: Actor, context: IActorContext, system) {
 
             }).take(1);
         })
-        .do((x: MessageResponse) => actor.mailbox.outgoing.next(x))
-        .subscribe();
+        , tap((x: MessageResponse) => actor.mailbox.outgoing.next(x))
+    ).subscribe();
 }

@@ -52,17 +52,19 @@ export function createSystem(opts: ICreateOptions = {}): System {
         return actor
             .mailbox
             .outgoing
-            .do((incoming: MessageResponse) => {
-                if (incoming.errors.length) {
-                    const address = actor.address;
-                    const factory = actor._factoryMethod;
-                    return concat(
-                        system.restartActor(actor),
-                        system.removeActor(new ActorRefFn(actor.address, system)),
-                        system.reincarnate(address, factory)
-                    ).subscribe();
-                }
-            })
+            .pipe(
+                tap((incoming: MessageResponse) => {
+                    if (incoming.errors.length) {
+                        const address = actor.address;
+                        const factory = actor._factoryMethod;
+                        return concat(
+                            system.restartActor(actor),
+                            system.removeActor(new ActorRefFn(actor.address, system)),
+                            system.reincarnate(address, factory)
+                        ).subscribe();
+                    }
+                })
+            )
     }))
         .subscribe(x => system.responses.next(x as any));
 

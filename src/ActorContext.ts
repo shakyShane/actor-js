@@ -1,14 +1,12 @@
-import {Observable} from "rxjs/Observable";
-import {BehaviorSubject} from "rxjs/BehaviorSubject";
-import {IScheduler} from "rxjs/Scheduler";
+import {Observable, BehaviorSubject, SchedulerLike} from "rxjs";
 import {ActorRef, IncomingMessage, MessageResponse} from "./types";
 
 export interface IActorContext {
     actorOf(factory: Function, address?: string): ActorRef
     actorSelection(search): ActorRef[]
-    scheduler: IScheduler;
-    messageScheduler: IScheduler;
-    timeScheduler: IScheduler;
+    scheduler: SchedulerLike;
+    messageScheduler: SchedulerLike;
+    timeScheduler: SchedulerLike;
     gracefulStop(actorRefs: ActorRef|ActorRef[]): Observable<any>
     stop(ActorRef): void
     cleanupCancelledMessages(
