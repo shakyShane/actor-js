@@ -1,8 +1,8 @@
 import {Actor} from "./createActor";
-import {ActorRef} from "./types";
+import {IActorRef} from "./types";
 
 export interface IActorRegister {
-    [address: string]: Actor
+    [address: string]: Actor;
 }
 
 export function addActor(register: IActorRegister, actor: Actor): IActorRegister {
@@ -10,7 +10,7 @@ export function addActor(register: IActorRegister, actor: Actor): IActorRegister
     return register;
 }
 
-export function removeActor(register: IActorRegister, actor: ActorRef): IActorRegister {
+export function removeActor(register: IActorRegister, actor: IActorRef): IActorRegister {
     return Object.keys(register).reduce((acc, key) => {
         if (key === actor.address) {
             return acc;

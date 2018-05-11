@@ -2,7 +2,7 @@ import {EMPTY, Observable} from "rxjs";
 import {IActorContext} from "../ActorContext";
 import {Actor} from "../createActor";
 import {BehaviorSubject, from, Subscription} from "rxjs";
-import {IncomingMessage, MessageResponse, OutgoingResponseFromStream} from "../types";
+import {IncomingMessage, IMessageResponse, IOutgoingResponseFromStream} from "../types";
 import {catchError, map, mergeMap, tap} from "rxjs/internal/operators";
 
 type EffectFn = (stream: Observable<IncomingMessage>) => Observable<any>;
@@ -11,7 +11,7 @@ export type IRespondableStream = Observable<{respond: (response: any) => any, ty
 export type IMethodStream<Payload, Response, State> = Observable<{
     payload: Payload,
     state?: State,
-    respond(response: Response, state?: State): MessageResponse
+    respond(response: Response, state?: State): IMessageResponse
 }>
 
 function getInitialState(actor: Actor): any {
@@ -48,7 +48,7 @@ export function mappedMethods(actor: Actor, context: IActorContext) {
                 )
             }, state$)
         })
-        , map((incomingMessage: OutgoingResponseFromStream): MessageResponse => {
+        , map((incomingMessage: IOutgoingResponseFromStream): IMessageResponse => {
             return {
                 errors: [],
                 response: (incomingMessage as any).resp,

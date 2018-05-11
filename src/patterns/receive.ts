@@ -3,7 +3,7 @@ import {mergeMap, tap, take} from "rxjs/operators";
 import {IActorContext} from "../ActorContext";
 import {Actor} from "../createActor";
 import {ActorRef} from "../ActorRef";
-import {IncomingMessage, MessageResponse} from "../types";
+import {IncomingMessage, IMessageResponse} from "../types";
 
 export interface MessageSenderRef {
     id: string,
@@ -19,7 +19,7 @@ export function receive(actor: Actor, context: IActorContext, system) {
             const { address, action, contextCreator } = incomingMessage.message;
             const respId = incomingMessage.messageID;
 
-            return Observable.create((obs: Observer<MessageResponse>) => {
+            return Observable.create((obs: Observer<IMessageResponse>) => {
 
                 const respond = (response) => obs.next({errors: [], response, respId});
 
@@ -33,6 +33,6 @@ export function receive(actor: Actor, context: IActorContext, system) {
                 }
             }).pipe(take(1));
         })
-        , tap((x: MessageResponse) => actor.mailbox.outgoing.next(x))
+        , tap((x: IMessageResponse) => actor.mailbox.outgoing.next(x))
     ).subscribe();
 }

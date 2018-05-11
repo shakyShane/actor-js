@@ -16,7 +16,7 @@
     "request": "^2.81.0",
     "rxjs-compat": "^6.1.0",
     "source-map-support": "^0.4.14",
-    "tslint": "^5.1.0",
+    "tslint": "^5.10.0",
     "typescript": "2.8"
   },
   "files": [
@@ -25,7 +25,7 @@
   ],
   "scripts": {
     "test": "cb test",
-    "prepublish": "cb test"
+    "prepublishOnly": "cb test"
   },
   "repository": "shakyShane/actor-js",
   "keywords": [

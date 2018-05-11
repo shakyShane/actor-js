@@ -1,17 +1,17 @@
+import {Observable, Observer, Subject} from "rxjs";
 import {Actor} from "./createActor";
 import {Mailbox} from "./getMailbox";
-import {Subject, Observable, Observer} from "rxjs";
-import {IncomingMessage, MessageResponse} from "./types";
+import {IMessageResponse, IncomingMessage} from "./types";
 
 export interface MessageSenderRef {
-    id: string,
-    reply(message: any): void
+    id: string;
+    reply(message: any): void;
 }
 
-export function createDefaultMailbox (actor: Actor): Mailbox {
+export function createDefaultMailbox(actor: Actor): Mailbox {
 
     const incomingMessages = new Subject<IncomingMessage>();
-    const outgoingMessages = new Subject<MessageResponse>();
+    const outgoingMessages = new Subject<IMessageResponse>();
 
     // const outgoing = incomingMessages
     //     .flatMap((incomingMessage: IncomingMessage) => {
@@ -51,6 +51,6 @@ export function createDefaultMailbox (actor: Actor): Mailbox {
 
     return {
         outgoing: outgoingMessages,
-        incoming: incomingMessages
+        incoming: incomingMessages,
     };
 }

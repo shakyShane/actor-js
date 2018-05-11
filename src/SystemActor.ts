@@ -5,22 +5,22 @@ export interface IActorFactory {
     mailboxType: string;
     address: string;
     context: IActorContext;
-    receive(payload: any, message: IncomingMessage): any
+    receive(payload: any, message: IncomingMessage): any;
 }
 
 export class BaseActorFactory implements IActorFactory {
-    public mailboxType = 'default';
+    public mailboxType = "default";
     constructor(public address: string, public context: IActorContext) {
         return this;
     }
-    receive(payload, message) {
+    public receive(payload, message) {
         // console.log('Should be overriden');
         // console.log('payload', 'message');
     }
 }
 
 export class SystemActor extends BaseActorFactory {
-    receive() {
+    public receive() {
         // console.log('Sup from system');
     }
 }

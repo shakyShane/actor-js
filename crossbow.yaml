@@ -4,10 +4,16 @@ tasks:
     - '@npm mocha'
 
   test:
+    - lint
     - '@sh rm -rf dist/**'
     - '@npm tsc'
-#    - browser
     - unit
+
+  lint: >
+    @npm tslint
+    src/**
+    --format stylish
+    --fix
 
   build:
     - test
@@ -16,36 +22,3 @@ tasks:
     - test
     - '@sh git add .'
     - '@sh git commit -m "$CB_CLI_TRAILING"'
-
-  browser:
-    description: A special build for Browsers
-    tasks:
-      - browserify
-      - uglify
-
-  browserify:
-    description: A special build for browser-globals
-    tasks:
-      - >
-        @npm browserify dist/index.js -d |
-        exorcist dist/staunch.js.map
-        > dist/staunch.js
-
-  uglify:
-    description: Minify the browser build
-    tasks:
-      - >
-        @npm uglifyjs dist/staunch.js
-        --mangle --screw-ie8
-        --source-map-url browser.min.js.map
-        --in-source-map dist/staunch.js.map
-        --source-map dist/staunch.min.js.map > dist/staunch.min.js
-
-
-  examples: >
-    @npm browser-sync start
-    --server examples
-    --files examples
-    --ss .
-    --directory
-

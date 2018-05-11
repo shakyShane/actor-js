@@ -1,4 +1,4 @@
-import uuid = require('uuid/v4');
+import uuid = require("uuid/v4");
 import {IncomingStateActor, StateActor} from "./createActor";
 
 export function createStateActor(input: IncomingStateActor): StateActor {
@@ -11,6 +11,6 @@ export function createStateActor(input: IncomingStateActor): StateActor {
         address: name,
         effects,
         methods,
-        mailboxType: 'state'
+        mailboxType: "state",
     };
 }

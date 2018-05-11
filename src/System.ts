@@ -1,34 +1,34 @@
-import {Actor} from "./createActor";
 import {
-    Observable,
-    Subject,
-    BehaviorSubject,
-    asyncScheduler,
     asapScheduler,
+    asyncScheduler,
+    BehaviorSubject,
+    Observable,
+    of,
     SchedulerLike,
-    Subscription,
-    of, throwError
-} from 'rxjs';
+    Subject,
+    Subscription, throwError,
+} from "rxjs";
+import {Actor} from "./createActor";
 
-import debug = require('debug');
-import uuid = require('uuid/v4');
-import anymatch = require('anymatch');
-import {ActorRef} from "./ActorRef";
-import {ICreateOptions} from "./index";
-import {IActorContext} from "./ActorContext";
-import {createDefaultMailbox} from "./createDefaultMailbox";
+import anymatch = require("anymatch");
 import {setMaxListeners} from "cluster";
-import * as patterns from './patterns';
+import debug = require("debug");
+import uuid = require("uuid/v4");
+import {IActorContext} from "./ActorContext";
+import {ActorRef} from "./ActorRef";
+import {createDefaultMailbox} from "./createDefaultMailbox";
+import {ICreateOptions} from "./index";
+import * as patterns from "./patterns";
 
-import {IRespondableStream} from "./patterns/mapped-methods";
-import {IncomingMessage, IOutgoingMessage, MessageResponse, OutgoingResponseFromStream} from "./types";
-import {merge, EMPTY, zip, concat} from "rxjs";
-import {tap, take, map, filter, mergeMap, toArray, withLatestFrom} from "rxjs/operators";
+import {concat, EMPTY, merge, zip} from "rxjs";
 import {scan} from "rxjs/internal/operators";
+import {filter, map, mergeMap, take, tap, toArray, withLatestFrom} from "rxjs/operators";
+import {IRespondableStream} from "./patterns/mapped-methods";
+import {IMessageResponse, IncomingMessage, IOutgoingMessage, IOutgoingResponseFromStream} from "./types";
 
-const logger = debug('acjs:System');
-const lifecycleLogger = debug('acjs:lifecycle');
-const messageLogger = debug('acjs:message');
+const logger = debug("acjs:System");
+const lifecycleLogger = debug("acjs:lifecycle");
+const messageLogger = debug("acjs:message");
 const log = (ns) => (message) => logger(`${ns}`, message);
 
 export type Effect = (payload: any, message: IncomingMessage) => Observable<any>;
@@ -38,11 +38,11 @@ export class System {
     public actorRegister: BehaviorSubject<any>;
     public incomingActors: Subject<Actor>;
     public outgoingActors: Subject<ActorRef>;
-    public responses: Subject<MessageResponse>;
-    public cancelations = new Subject<MessageResponse>();
+    public responses: Subject<IMessageResponse>;
+    public cancelations = new Subject<IMessageResponse>();
     public mailboxes: BehaviorSubject<any>;
     public arbiter: Subject<IncomingMessage>;
-    public address = '/system';
+    public address = "/system";
     public messageScheduler: SchedulerLike;
     public timeScheduler: SchedulerLike;
 
@@ -54,7 +54,7 @@ export class System {
         // stream of actors to be removed from the register
         this.outgoingActors = new Subject<ActorRef>();
         // responses stream where actors can 'reply' via an messageID
-        this.responses      = new Subject<MessageResponse>();
+        this.responses      = new Subject<IMessageResponse>();
         // an object containing all mailboxes
         this.mailboxes      = new BehaviorSubject({});
         // create an arbiter for handling incoming messages
@@ -97,33 +97,33 @@ export class System {
     public initActor(actor: Actor, context, address, factory, contextCreator: string): ActorRef {
 
         if (actor.preStart) {
-            lifecycleLogger('preStart', address);
+            lifecycleLogger("preStart", address);
             actor.preStart();
         }
 
         this.incomingActors.next(actor);
 
         if (actor.postStart) {
-            lifecycleLogger('postStart', address);
+            lifecycleLogger("postStart", address);
             actor.postStart();
         }
 
         if (actor.setupReceive) {
-            lifecycleLogger('setupReceive', address);
+            lifecycleLogger("setupReceive", address);
             actor.setupReceive(actor.mailbox.incoming).pipe(
-                map((incomingMessage: OutgoingResponseFromStream): MessageResponse => {
+                map((incomingMessage: IOutgoingResponseFromStream): IMessageResponse => {
                     return {
                         errors: [],
                         response: (incomingMessage as any).resp,
                         respId: incomingMessage.messageID,
-                    }
+                    };
                 })
-                , tap(x => actor.mailbox.outgoing.next(x))
+                , tap((x) => actor.mailbox.outgoing.next(x)),
             ).subscribe();
         }
 
         if (actor.patterns) {
-            actor.patterns.forEach(pattern => {
+            actor.patterns.forEach((pattern) => {
                 const match = patterns[pattern];
                 if (match) {
                     match.call(null, actor, context);
@@ -142,13 +142,13 @@ export class System {
     }
 
     public reincarnate(address, _factoryMethod): Observable<any> {
-        return Observable.create(observer => {
+        return Observable.create((observer) => {
             const context   = this.createContext(address);
             const newActor  = this.createActor(_factoryMethod, address, context);
             const decorated = this.decorateActor(newActor, address, _factoryMethod);
 
             if (decorated.postRestart) {
-                lifecycleLogger('postRestart', address);
+                lifecycleLogger("postRestart", address);
                 decorated.postRestart();
             }
             this.incomingActors.next(decorated);
@@ -163,31 +163,31 @@ export class System {
 
         const lookup = (() => {
             // if an absolute path is given, always use as-is
-            if (search[0] === '/') {
+            if (search[0] === "/") {
                 return search;
             }
-            return [(prefix || this.address), search].join('/');
+            return [(prefix || this.address), search].join("/");
         })();
 
         // strip any trailing slashes
-        const stripped = lookup.replace(/\/$/, '');
+        const stripped = lookup.replace(/\/$/, "");
         const matcher  = anymatch(stripped);
         const contextCreator = prefix;
 
         return addresses
             .filter(matcher)
-            .map(address => new ActorRef(address, this, contextCreator));
+            .map((address) => new ActorRef(address, this, contextCreator));
     }
 
     private stopActor(actorRef: ActorRef): Observable<any> {
         const self = this;
-        return Observable.create(observer => {
+        return Observable.create((observer) => {
             const reg = self.actorRegister.getValue();
             const selectedActor = reg[actorRef.address];
             if (selectedActor) {
                 // console.log('private stopActor CREATE', Object.keys(reg));
                 if (selectedActor.postStop) {
-                    lifecycleLogger('postStop', actorRef.address);
+                    lifecycleLogger("postStop", actorRef.address);
                     selectedActor.postStop();
                 }
             }
@@ -197,10 +197,10 @@ export class System {
 
     public restartActor(actor: Actor): Observable<any> {
         const self = this;
-        return Observable.create(observer => {
+        return Observable.create((observer) => {
             // console.log('private stopActor CREATE', Object.keys(reg));
             if (actor.preRestart) {
-                lifecycleLogger('preRestart', actor.address);
+                lifecycleLogger("preRestart", actor.address);
                 actor.preRestart();
             }
             observer.complete();
@@ -209,9 +209,9 @@ export class System {
 
     public removeActor(actorRef: ActorRef): Observable<any> {
         return of(true, this.messageScheduler).pipe(
-            tap(x => this.outgoingActors.next(actorRef))
-            , take(1)
-        )
+            tap((x) => this.outgoingActors.next(actorRef))
+            , take(1),
+        );
     }
 
     private createActor(factory, address: string, context: IActorContext): Actor {
@@ -236,17 +236,17 @@ export class System {
                 if (!localAddress) {
                     localAddress = uuid();
                 }
-                return bound(factory, [prefix, localAddress].join('/'), parentAddress);
+                return bound(factory, [prefix, localAddress].join("/"), parentAddress);
             },
             actorSelection(search): ActorRef[] {
                 return boundSelection(search, parentAddress);
             },
             stop: boundStop,
-            gracefulStop: gracefulStop,
+            gracefulStop,
             scheduler: this.messageScheduler,
             messageScheduler: this.messageScheduler,
             timeScheduler: this.timeScheduler,
-        }
+        };
     }
 
     /**
@@ -257,39 +257,39 @@ export class System {
      * @param messageID
      */
     public ask(message: IOutgoingMessage, messageID?: string): Observable<any> {
-        if (!messageID) messageID = uuid();
+        if (!messageID) { messageID = uuid(); }
 
         const responses = this.responses.pipe(
-            filter(x => x.respId === messageID)
+            filter((x) => x.respId === messageID),
         );
 
         const cancelations = this.cancelations.pipe(
-            filter(x => x.respId === messageID)
-            , map(x => {
+            filter((x) => x.respId === messageID)
+            , map((x) => {
                 return Object.assign({}, x, {cancelled: true});
-            })
+            }),
         );
 
         const trackResponse = merge(responses, cancelations).pipe(
             take(1)
-            , tap(x => messageLogger('ask resp <-', x))
-            , mergeMap((incoming: MessageResponse) => {
+            , tap((x) => messageLogger("ask resp <-", x))
+            , mergeMap((incoming: IMessageResponse) => {
                 if (incoming.errors.length) {
-                    return throwError(incoming.errors[0])
+                    return throwError(incoming.errors[0]);
                 }
                 if (incoming.cancelled) {
                     return EMPTY;
                 }
                 return of(incoming.response);
-            })
+            }),
         );
 
         const messageSender = of({message, messageID}, this.messageScheduler).pipe(
-            tap(x => messageLogger('ask outgoing ->', x))
-            , tap(message => this.arbiter.next(message))
+            tap((x) => messageLogger("ask outgoing ->", x))
+            , tap((message) => this.arbiter.next(message)),
         );
 
-        return zip(trackResponse, messageSender, (resp) => resp)
+        return zip(trackResponse, messageSender, (resp) => resp);
     }
 
     /**
@@ -297,12 +297,12 @@ export class System {
      */
     public tell(message: IOutgoingMessage, messageID?: string): Observable<any> {
 
-        if (!messageID) messageID = uuid();
+        if (!messageID) { messageID = uuid(); }
 
         return of({message, messageID}, this.messageScheduler).pipe(
-            tap(x => this.arbiter.next(x))
-            , take(1)
-        )
+            tap((x) => this.arbiter.next(x))
+            , take(1),
+        );
     }
 
     private createActorAddress(path: string): string {
@@ -310,16 +310,16 @@ export class System {
             path = uuid();
         }
 
-        if (path.indexOf('/system') === -1) {
-            return [this.address, path].join('/');
+        if (path.indexOf("/system") === -1) {
+            return [this.address, path].join("/");
         }
 
         return path;
     }
 
-    private getParentRef (address): ActorRef {
-        const parentAddress = address.split('/').slice(0, -1);
-        return new ActorRef(parentAddress.join('/'), this);
+    private getParentRef(address): ActorRef {
+        const parentAddress = address.split("/").slice(0, -1);
+        return new ActorRef(parentAddress.join("/"), this);
     }
 
     private createGracefulStopSequence(actorRef: ActorRef): Observable<any> {
@@ -327,10 +327,10 @@ export class System {
             System.warnInvalidActorRef();
         }
         return concat(
-            this.ask({address: actorRef.address, action: {type: 'stop'}}),
+            this.ask({address: actorRef.address, action: {type: "stop"}}),
                 // .do(x => console.log('graceful stop OK', actorRef.address)),
             this.stopActor(actorRef),
-            this.removeActor(actorRef)
+            this.removeActor(actorRef),
         );
     }
 
@@ -339,9 +339,9 @@ export class System {
             System.warnInvalidActorRef();
         }
         return concat(
-            this.tell({address: actorRef.address, action: {type: 'stop'}}),
+            this.tell({address: actorRef.address, action: {type: "stop"}}),
             this.stopActor(actorRef),
-            this.removeActor(actorRef)
+            this.removeActor(actorRef),
         ).subscribe();
     }
 
@@ -353,36 +353,36 @@ export class System {
         }
 
         // console.log(refs);
-        return concat(...refs.map(x => this.createGracefulStopSequence(x))).pipe(
-            toArray()
-        )
+        return concat(...refs.map((x) => this.createGracefulStopSequence(x))).pipe(
+            toArray(),
+        );
     }
 
-    static warnInvalidActorRef() {
-        throw new Error('Invalid actor provided. Please check your usage');
+    public static warnInvalidActorRef() {
+        throw new Error("Invalid actor provided. Please check your usage");
     }
 
-    static isActorRef(input: any) {
+    public static isActorRef(input: any) {
         if (!input) {
             // anything falsey
-            return false
+            return false;
         }
-        if (typeof input.address === 'string') {
+        if (typeof input.address === "string") {
             return true;
         }
         return false;
     }
 
-    static filterByType(stream: Observable<IncomingMessage>, type: string): Observable<IncomingMessage> {
+    public static filterByType(stream: Observable<IncomingMessage>, type: string): Observable<IncomingMessage> {
         return stream.pipe(
             filter((msg: IncomingMessage) => {
                 const { address, action } = msg.message;
                 return action.type === type;
-            })
-        )
+            }),
+        );
     }
 
-    static addResponse(stream: Observable<any>, state$: BehaviorSubject<any>, system: System): IRespondableStream {
+    public static addResponse(stream: Observable<any>, state$: BehaviorSubject<any>, system: System): IRespondableStream {
         if (!state$) {
             state$ = new BehaviorSubject(undefined);
         }
@@ -398,9 +398,9 @@ export class System {
                     },
                     state,
                     sender,
-                }
-            })
-        )
+                };
+            }),
+        );
     }
 
     public cleanupCancelledMessages(stream, type: string, fn, state$?) {
@@ -415,13 +415,13 @@ export class System {
         const collated = filtered.pipe(
             scan((acc, item: IncomingMessage) => {
                 return acc.concat(item);
-            }, [] as IncomingMessage[])
+            }, [] as IncomingMessage[]),
         );
 
         return output.pipe(
             withLatestFrom(collated, (out, all) => {
                 const toCancel = all
-                    .filter(x => {
+                    .filter((x) => {
                         return x.messageID !== (out as any).messageID;
                     })
                     .map((msg: IncomingMessage) => {
@@ -429,17 +429,17 @@ export class System {
                             {},
                             msg,
                             {respId: msg.messageID},
-                            {errors: []}
-                        )
+                            {errors: []},
+                        );
                     });
 
-                toCancel.forEach(x => {
+                toCancel.forEach((x) => {
                     this.cancelations.next(x);
                 });
 
                 return out;
-            })
-        )
+            }),
+        );
             // .take(1)
     }
 }
