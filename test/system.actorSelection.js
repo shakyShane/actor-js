@@ -85,34 +85,6 @@ describe('system.actorSelection', function () {
         scheduler.flush();
     });
 
-    it('can select a level up', function () {
-        const scheduler = new TestScheduler();
-        const system = createSystem({
-            messageScheduler: scheduler
-        });
-        const child = function (address, context) {
-            return {
-                postStart() {
-                    const parents = context.actorSelection('../');
-                    assert.equal(parents[0].address, '/system/guardian-01');
-                }
-            }
-        };
-        const Guardian = function (address, context) {
-            return {
-                postStart() {
-                    context.actorOf(child, 'TTT');
-                },
-                receive() {
-
-                }
-            }
-        };
-
-        system.actorOf(Guardian, 'guardian-01');
-        scheduler.flush();
-    });
-
     it('select multiple grandchildren with a glob', function () {
         const scheduler = new TestScheduler();
         const system = createSystem({

@@ -33,7 +33,7 @@ export interface IOutgoingMessage {
 
 export interface MessageResponse {
     errors: Error[]
-    response: any
+    response?: any
     respId: string
     cancelled?: boolean
     state?: any

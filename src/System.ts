@@ -1,4 +1,4 @@
-import {Actor, StateActor} from "./createActor";
+import {Actor} from "./createActor";
 import {
     Observable,
     Subject,
@@ -12,7 +12,6 @@ import {
 
 import debug = require('debug');
 import uuid = require('uuid/v4');
-import path = require('path');
 import anymatch = require('anymatch');
 import {ActorRef} from "./ActorRef";
 import {ICreateOptions} from "./index";
@@ -20,6 +19,7 @@ import {IActorContext} from "./ActorContext";
 import {createDefaultMailbox} from "./createDefaultMailbox";
 import {setMaxListeners} from "cluster";
 import * as patterns from './patterns';
+
 import {IRespondableStream} from "./patterns/mapped-methods";
 import {IncomingMessage, IOutgoingMessage, MessageResponse, OutgoingResponseFromStream} from "./types";
 import {merge, EMPTY, zip, concat} from "rxjs";
@@ -32,7 +32,6 @@ const messageLogger = debug('acjs:message');
 const log = (ns) => (message) => logger(`${ns}`, message);
 
 export type Effect = (payload: any, message: IncomingMessage) => Observable<any>;
-export type SystemMessages = 'stop';
 
 export class System {
 
@@ -157,7 +156,7 @@ export class System {
         });
     }
 
-    public actorSelection(search, prefix?: string): ActorRef[] {
+    public actorSelection(search: string, prefix?: string): ActorRef[] {
 
         const actorRegister = this.actorRegister.getValue();
         const addresses     = Object.keys(actorRegister);
@@ -172,7 +171,7 @@ export class System {
 
         // strip any trailing slashes
         const stripped = lookup.replace(/\/$/, '');
-        const matcher  = anymatch(path.join(stripped));
+        const matcher  = anymatch(stripped);
         const contextCreator = prefix;
 
         return addresses
@@ -403,12 +402,6 @@ export class System {
             })
         )
     }
-
-    // static ofType(stream: Observable<any>, type: string): IRespondableStream {
-    //     return System.addResponse(
-    //         System.filterByType(stream, type)
-    //     );
-    // }
 
     public cleanupCancelledMessages(stream, type: string, fn, state$?) {
 
