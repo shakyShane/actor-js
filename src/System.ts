@@ -23,7 +23,8 @@ import * as patterns from "./patterns";
 import {concat, EMPTY, merge, zip} from "rxjs";
 import {scan} from "rxjs/internal/operators";
 import {filter, map, mergeMap, take, tap, toArray, withLatestFrom} from "rxjs/operators";
-import {IRespondableStream} from "./patterns/mapped-methods";
+import {invalidActorRefError} from "./System.errors";
+import {addResponse, filterByType, isActorRef, warnInvalidActorRef} from "./System.utils";
 import {IActorRef, IMessageResponse, IncomingMessage, IOutgoingMessage, IOutgoingResponseFromStream} from "./types";
 
 const logger = debug("acjs:System");
@@ -35,53 +36,6 @@ export type Effect = (payload: any, message: IncomingMessage) => Observable<any>
 
 export class System {
 
-    public static warnInvalidActorRef() {
-        throw new Error("Invalid actor provided. Please check your usage");
-    }
-
-    public static isActorRef(input: any) {
-        if (!input) {
-            // anything falsey
-            return false;
-        }
-        if (typeof input.address === "string") {
-            return true;
-        }
-        return false;
-    }
-
-    public static filterByType(stream: Observable<IncomingMessage>, type: string): Observable<IncomingMessage> {
-        return stream.pipe(
-            filter((msg: IncomingMessage) => {
-                const { address, action } = msg.message;
-                return action.type === type;
-            }),
-        );
-    }
-
-    public static addResponse(stream: Observable<any>,
-                              state$: BehaviorSubject<any>,
-                              system: System): IRespondableStream {
-        if (!state$) {
-            state$ = new BehaviorSubject(undefined);
-        }
-        return stream.pipe(
-            withLatestFrom(state$, (msg: IncomingMessage, state) => {
-                const { address, action, contextCreator } = msg.message;
-                const sender = new ActorRef(contextCreator);
-                return {
-                    payload: action.payload,
-                    respond: (resp: any, stateUpdate?: any) => {
-                        return Object.assign({}, msg, {resp, state: stateUpdate});
-                    },
-                    sender,
-                    state,
-                    type: action.type,
-                };
-            }),
-        );
-    }
-
     public actorRegister: BehaviorSubject<any>;
     public incomingActors: Subject<IActor>;
     public outgoingActors: Subject<ActorRef>;
@@ -92,10 +46,6 @@ export class System {
     public address = "/system";
     public messageScheduler: SchedulerLike;
     public timeScheduler: SchedulerLike;
-
-    public errors = {
-        InvalidActorRef: `The first argument should be an IActorRef, with at least an 'address' property`,
-    };
 
     constructor(opts: ICreateOptions) {
         // global actorRegister of available actors
@@ -145,8 +95,8 @@ export class System {
             state$ = new BehaviorSubject(undefined);
         }
 
-        const filtered = System.filterByType(stream, type);
-        const output = fn(System.addResponse(filtered, state$, this));
+        const filtered = filterByType(stream, type);
+        const output = fn(addResponse(filtered, state$, this));
 
         const collated = filtered.pipe(
             scan((acc, item: IncomingMessage) => {
@@ -325,8 +275,8 @@ export class System {
         const self = new ActorRef(parentAddress);
 
         const tell = (ref: IActorRef, type: string, payload?: any) => {
-            if (!ref.address || typeof ref.address !== "string") {
-                return throwError(new Error(this.errors.InvalidActorRef));
+            if (!isActorRef(ref)) {
+                return invalidActorRefError(ref);
             }
             const outgoing = {
                 action: {type, payload},
@@ -337,8 +287,8 @@ export class System {
         };
 
         const ask = (ref: IActorRef, type: string, payload?: any) => {
-            if (!ref.address || typeof ref.address !== "string") {
-                return throwError(new Error(this.errors.InvalidActorRef));
+            if (!isActorRef(ref)) {
+                return invalidActorRefError(ref);
             }
             const outgoing = {
                 action: {type, payload},
@@ -446,8 +396,8 @@ export class System {
     }
 
     public createGracefulStopSequence(actorRef: ActorRef): Observable<any> {
-        if (!System.isActorRef(actorRef)) {
-            System.warnInvalidActorRef();
+        if (!isActorRef(actorRef)) {
+            warnInvalidActorRef();
         }
         return concat(
             this.ask({address: actorRef.address, action: {type: "stop"}}),
@@ -458,8 +408,8 @@ export class System {
     }
 
     public stop(actorRef: ActorRef): Subscription {
-        if (!System.isActorRef(actorRef)) {
-            System.warnInvalidActorRef();
+        if (!isActorRef(actorRef)) {
+            warnInvalidActorRef();
         }
         return concat(
             this.tell({address: actorRef.address, action: {type: "stop"}}),
@@ -471,8 +421,8 @@ export class System {
     public gracefulStop(actorRefs: ActorRef|ActorRef[]): Observable<any> {
         const refs = [].concat(actorRefs).filter(Boolean);
 
-        if (!refs.every(System.isActorRef)) {
-            System.warnInvalidActorRef();
+        if (!refs.every(isActorRef)) {
+            warnInvalidActorRef();
         }
 
         // console.log(refs);
