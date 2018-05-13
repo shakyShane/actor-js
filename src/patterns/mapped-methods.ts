@@ -1,6 +1,6 @@
 import {EMPTY, Observable} from "rxjs";
 import {IActorContext} from "../ActorContext";
-import {Actor} from "../createActor";
+import {IActor} from "../createActor";
 import {BehaviorSubject, from, Subscription} from "rxjs";
 import {IncomingMessage, IMessageResponse, IOutgoingResponseFromStream} from "../types";
 import {catchError, map, mergeMap, tap} from "rxjs/internal/operators";
@@ -14,7 +14,7 @@ export type IMethodStream<Payload, Response, State> = Observable<{
     respond(response: Response, state?: State): IMessageResponse
 }>
 
-function getInitialState(actor: Actor): any {
+function getInitialState(actor: IActor): any {
     if (typeof actor.initialState !== 'undefined') {
         return actor.initialState;
     }
@@ -24,7 +24,7 @@ function getInitialState(actor: Actor): any {
     return undefined;
 }
 
-export function mappedMethods(actor: Actor, context: IActorContext) {
+export function mappedMethods(actor: IActor, context: IActorContext) {
     const {methods} = actor;
     const {incoming} = actor.mailbox;
     const initial = getInitialState(actor);

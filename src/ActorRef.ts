@@ -7,18 +7,18 @@ export class ActorRef {
 
     public ask(type: string, payload?: any) {
         const outgoing = {
-            contextCreator: this.contextCreator,
-            address: this.address,
             action: {type, payload},
+            address: this.address,
+            contextCreator: this.contextCreator,
         };
         return this.system.ask(outgoing);
     }
 
     public tell(type: string, payload?: any) {
         const outgoing = {
-            contextCreator: this.contextCreator,
-            address: this.address,
             action: {type, payload},
+            address: this.address,
+            contextCreator: this.contextCreator,
         };
         return this.system.tell(outgoing);
     }

@@ -1,7 +1,7 @@
 import {Observable, Observer} from "rxjs";
 import {mergeMap, tap, take} from "rxjs/operators";
 import {IActorContext} from "../ActorContext";
-import {Actor} from "../createActor";
+import {IActor} from "../createActor";
 import {ActorRef} from "../ActorRef";
 import {IncomingMessage, IMessageResponse} from "../types";
 
@@ -10,7 +10,7 @@ export interface MessageSenderRef {
     reply(message: any): void
 }
 
-export function receive(actor: Actor, context: IActorContext, system) {
+export function receive(actor: IActor, context: IActorContext, system) {
     const {methods} = actor;
     const {incoming} = actor.mailbox;
 

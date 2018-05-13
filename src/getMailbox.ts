@@ -3,7 +3,7 @@ import {Observable, Subject} from "rxjs";
 import {createDefaultMailbox} from "./createDefaultMailbox";
 import {IMessageResponse, IncomingMessage} from "./types";
 
-export default function getMailbox(actor, type: MailboxType, system): Mailbox {
+export default function getMailbox(actor, type: MailboxType, system): IMailbox {
     if (type === "default") {
         return createDefaultMailbox(actor);
     }
@@ -12,7 +12,7 @@ export default function getMailbox(actor, type: MailboxType, system): Mailbox {
     // }
 }
 
-export interface Mailbox {
+export interface IMailbox {
     outgoing: Subject<IMessageResponse>;
     incoming: Subject<IncomingMessage>;
 }

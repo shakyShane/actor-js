@@ -4,7 +4,7 @@ import {filter, map, mergeMap, scan, tap, withLatestFrom} from "rxjs/operators";
 import {IActorContext} from "./ActorContext";
 import {ActorRef as ActorRefFn} from "./ActorRef";
 import {addActor, removeActor} from "./ActorRegister";
-import {Actor, createActor} from "./createActor";
+import {createActor, IActor} from "./createActor";
 import {createStateActor} from "./createStateActor";
 import * as patterns from "./patterns";
 import {IMethodStream, IRespondableStream} from "./patterns/mapped-methods";
@@ -21,7 +21,7 @@ export interface ICreateOptions {
     factory?: IActorFactory;
 }
 
-type RegisterFn = (register: {[index: string]: Actor}, IActor) => {[index: string]: Actor};
+type RegisterFn = (register: {[index: string]: IActor}, IActor) => {[index: string]: IActor};
 
 export function createSystem(opts: ICreateOptions = {}): System {
 
@@ -39,7 +39,7 @@ export function createSystem(opts: ICreateOptions = {}): System {
             fn: removeActor as RegisterFn,
         }))),
     ).pipe(
-        scan((acc, {actor, fn}: {actor: Actor|IActorRef, fn: RegisterFn}) => {
+        scan((acc, {actor, fn}: {actor: IActor|IActorRef, fn: RegisterFn}) => {
             return fn(acc, actor);
         }, {}),
     )
@@ -76,12 +76,12 @@ export function createSystem(opts: ICreateOptions = {}): System {
             const [ name ] = message.address.split(".");
             const actor = register[name];
             return {
-                message,
                 actor,
                 mailbox: actor.mailbox,
-                register,
-                name,
+                message,
                 messageID,
+                name,
+                register,
             };
         })
         , filter((x) => {

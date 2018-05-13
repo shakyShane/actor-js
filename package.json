@@ -12,6 +12,7 @@
   "devDependencies": {
     "@kwonoj/rxjs-testscheduler-compat": "^1.0.2",
     "chai": "^3.5.0",
+    "crossbow": "^4.3.0",
     "mocha": "^3.2.0",
     "request": "^2.81.0",
     "rxjs-compat": "^6.1.0",

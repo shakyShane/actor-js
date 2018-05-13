@@ -1,11 +1,11 @@
-import {Actor} from "./createActor";
+import {IActor} from "./createActor";
 import {IActorRef} from "./types";
 
 export interface IActorRegister {
-    [address: string]: Actor;
+    [address: string]: IActor;
 }
 
-export function addActor(register: IActorRegister, actor: Actor): IActorRegister {
+export function addActor(register: IActorRegister, actor: IActor): IActorRegister {
     register[actor.address] = actor;
     return register;
 }

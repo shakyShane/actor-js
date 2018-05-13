@@ -1,7 +1,7 @@
 import uuid = require("uuid/v4");
-import {IncomingStateActor, StateActor} from "./createActor";
+import {IncomingStateActor, IStateActor} from "./createActor";
 
-export function createStateActor(input: IncomingStateActor): StateActor {
+export function createStateActor(input: IncomingStateActor): IStateActor {
     const name    = input.address || uuid();
     const effects = input.effects || {};
     const methods = input.methods || {};
@@ -10,7 +10,7 @@ export function createStateActor(input: IncomingStateActor): StateActor {
         ...input,
         address: name,
         effects,
-        methods,
         mailboxType: "state",
+        methods,
     };
 }

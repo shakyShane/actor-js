@@ -1,14 +1,14 @@
 import {Observable, Observer, Subject} from "rxjs";
-import {Actor} from "./createActor";
-import {Mailbox} from "./getMailbox";
+import {IActor} from "./createActor";
+import {IMailbox} from "./getMailbox";
 import {IMessageResponse, IncomingMessage} from "./types";
 
-export interface MessageSenderRef {
+export interface IMessageSenderRef {
     id: string;
     reply(message: any): void;
 }
 
-export function createDefaultMailbox(actor: Actor): Mailbox {
+export function createDefaultMailbox(actor: IActor): IMailbox {
 
     const incomingMessages = new Subject<IncomingMessage>();
     const outgoingMessages = new Subject<IMessageResponse>();
@@ -50,7 +50,7 @@ export function createDefaultMailbox(actor: Actor): Mailbox {
     //     }).share();
 
     return {
-        outgoing: outgoingMessages,
         incoming: incomingMessages,
+        outgoing: outgoingMessages,
     };
 }
