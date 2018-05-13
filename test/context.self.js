@@ -13,11 +13,11 @@ describe('context.self', function () {
             messageScheduler: scheduler
         });
         const calls = [];
-        const Child = function(address, context) {
+        const Child = function(address, {tell, self}) {
             return {
                 receive(name) {
                     if (name === 'first') {
-                        context.self.tell('second').subscribe();
+                        tell(self, 'second').subscribe();
                     }
                     if (name === 'second') {
                         calls.push('second');
@@ -26,7 +26,7 @@ describe('context.self', function () {
             }
         };
         const actor = system.actorOf(Child, 'p');
-        actor.tell('first').subscribe();
+        system.tell(actor, 'first').subscribe();
         scheduler.flush();
         assert.deepEqual(calls, ['second']);
     });

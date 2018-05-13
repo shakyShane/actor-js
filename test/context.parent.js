@@ -1,15 +1,12 @@
 require('source-map-support').install();
 const { assert } = require('chai');
-const Rx = require('rxjs');
 const { createSystem } = require('../');
 const { TestScheduler } = require('rxjs/testing/TestScheduler');
-const { SystemActor } = require('../dist/SystemActor');
-const { System } = require('../dist/System');
 
 describe('context.parent', function () {
     it('an actor can message its parent', function () {
         const scheduler = new TestScheduler();
-        const system = createSystem({
+        const {system, actorOf} = createSystem({
             messageScheduler: scheduler
         });
         const calls = [];
@@ -28,18 +25,18 @@ describe('context.parent', function () {
                 calls.push(payload);
             }
         };
-        const Child = function(address, context) {
+        const Child = function(address, {parent, tell}) {
             return {
                 postStart() {
                     calls.push('Child postStart()');
-                    context.parent.tell('Child started!').subscribe();
+                    tell(parent, 'Child started!').subscribe();
                 },
                 receive() {
                     // console.log('msg');
                 }
             }
         };
-        const parentActor = system.actorOf(Parent, 'p');
+        const parentActor = actorOf(Parent, 'p');
         scheduler.flush();
         assert.deepEqual(calls, [
             'Parent postStart()',

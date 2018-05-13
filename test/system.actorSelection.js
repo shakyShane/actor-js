@@ -22,7 +22,7 @@ describe('system.actorSelection', function () {
         };
         const actor = system.actorOf(Guardian, 'guardian-actor-01');
         const selected = system.actorSelection('/system/guardian-actor-01');
-        selected[0].tell('ping').subscribe();
+        system.tell(selected[0], 'ping').subscribe();
         scheduler.flush();
     });
     it('can select multiple actors at system level using glob', function () {
@@ -53,8 +53,8 @@ describe('system.actorSelection', function () {
         const actor = system.actorOf(Guardian, 'guardian-actor-01');
         const actor2 = system.actorOf(Guardian2, 'guardian-actor-02');
         const selected = system.actorSelection('**');
-        selected[0].tell('ping').subscribe();
-        selected[1].tell('ping ping').subscribe();
+        system.tell(selected[0], 'ping').subscribe();
+        system.tell(selected[1], 'ping ping').subscribe();
         scheduler.flush();
     });
 
@@ -73,7 +73,7 @@ describe('system.actorSelection', function () {
         const Guardian = function (address, context) {
             const systemActor = context.actorSelection('/system');
             // send a message to the system actor
-            systemActor[0].tell('ping').subscribe();
+            context.tell(systemActor[0], 'ping').subscribe();
             return {
                 receive() {
 
@@ -118,7 +118,7 @@ describe('system.actorSelection', function () {
                     context.actorOf(Parent, 'parent');
                     // access it's grandchildren
                     const children = context.actorSelection('parent/**');
-                    children.forEach(child => child.tell(`ping! ${child.address}`).subscribe())
+                    children.forEach(child => context.tell(child, `ping! ${child.address}`).subscribe())
                 },
                 receive() {
 

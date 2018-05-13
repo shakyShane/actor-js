@@ -1,11 +1,11 @@
 import {Observable, from} from "rxjs";
 import {concatMap, toArray} from "rxjs/operators";
-import {IActorRef, IMessageResponse} from "../types";
+import {AskFnBound, IActorRef, IMessageResponse} from "../types";
 
-export function askMany(actorRefs: IActorRef[], payload: any): Observable<IMessageResponse[]> {
+export function askMany(actorRefs: IActorRef[], ask: AskFnBound, payload: any): Observable<IMessageResponse[]> {
     return from(actorRefs).pipe(
         concatMap((child): Observable<IMessageResponse> => {
-            return child.ask(payload)
+            return ask(child, payload)
         })
         , toArray()
     )

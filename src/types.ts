@@ -1,10 +1,11 @@
+export type AskFnBound = (ref: IActorRef, name: string, payload?: any, id?: string) => any;
 export type AskFn = (name: string, payload?: any, id?: string) => any;
 export type TellFn = (name: string, payload?: any, id?: string) => any;
+export type TellFnBound = (ref: IActorRef, name: string, payload?: any, id?: string) => any;
 
 export interface IActorRef {
-    ask: AskFn;
-    tell: TellFn;
     address: string;
+    contextCreator?: string;
 }
 
 export type MessageId = string;

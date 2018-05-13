@@ -26,7 +26,7 @@ describe('system.actorOf', function() {
 
   it('/system -> child', function () {
       const scheduler = new TestScheduler();
-      const system = createSystem({
+      const {system, actorOf, tell} = createSystem({
           messageScheduler: scheduler
       });
       const Watcher = class {
@@ -51,9 +51,9 @@ describe('system.actorOf', function() {
               }
           }
       };
-      const actor = system.actorOf(FileWatcher, 'FileWatcher');
+      const actor = actorOf(FileWatcher, 'FileWatcher');
       assert.equal(actor.address, '/system/FileWatcher');
-      actor.tell('init').subscribe();
+      tell(actor, 'init').subscribe();
       scheduler.flush();
       const register = system.actorRegister.getValue();
       assert.equal(register['/system/FileWatcher'].type, 'FileWatcher');
@@ -62,7 +62,7 @@ describe('system.actorOf', function() {
 
   it('/system/actor -> child -> child', function () {
       const scheduler = new TestScheduler();
-      const system = createSystem({
+      const {system, actorOf, tell} = createSystem({
           messageScheduler: scheduler
       });
       const Watcher = class {
@@ -87,14 +87,14 @@ describe('system.actorOf', function() {
                       this.actors.push(
                           this.context.actorOf(Watcher, 'sub-path-01')
                       );
-                      this.actors[0].tell('Hey!').subscribe();
+                      this.context.tell(this.actors[0], 'Hey!').subscribe();
                   }
               }
           }
       };
-      const actor = system.actorOf(FileWatcher, 'FileWatcher');
+      const actor = actorOf(FileWatcher, 'FileWatcher');
       assert.equal(actor.address, '/system/FileWatcher');
-      actor.tell('init').subscribe();
+      tell(actor, 'init').subscribe();
       scheduler.flush();
       const register = system.actorRegister.getValue();
       assert.equal(register['/system/FileWatcher'].type, 'FileWatcher');
@@ -103,7 +103,7 @@ describe('system.actorOf', function() {
 
   it('/system/actor -> child -> child -> child', function () {
       const scheduler = new TestScheduler();
-      const system = createSystem({
+      const {system, actorOf, tell} = createSystem({
           messageScheduler: scheduler
       });
       const GrandchildActor = class {
@@ -122,8 +122,7 @@ describe('system.actorOf', function() {
               this.actors = [
                   context.actorOf(GrandchildActor)
               ];
-              this.actors[0].tell('Hey from the grandchild!')
-                  .subscribe();
+              context.tell(this.actors[0], 'Hey from the grandchild!').subscribe();
           }
           receive(payload) {
               // console.log('Re'
@@ -138,14 +137,15 @@ describe('system.actorOf', function() {
           }
           receive(payload) {
               switch(payload) {
-                  case 'init':
+                  case 'init': {
                       this.actors.push(this.context.actorOf(ChildActor, 'sub-path-01'));
+                  }
               }
           }
       };
-      const actor = system.actorOf(SystemLevelActor, 'SystemLevelActor');
+      const actor = actorOf(SystemLevelActor, 'SystemLevelActor');
       assert.equal(actor.address, '/system/SystemLevelActor');
-      actor.tell('init').subscribe();
+      tell(actor, 'init').subscribe();
       scheduler.flush();
 
       const register = system.actorRegister.getValue();

@@ -1,10 +1,7 @@
 require('source-map-support').install();
 const { assert } = require('chai');
-const Rx = require('rxjs');
 const { createSystem } = require('../');
 const { TestScheduler } = require('rxjs/testing/TestScheduler');
-const { SystemActor } = require('../dist/SystemActor');
-const { System } = require('../dist/System');
 
 describe('system.stop', function() {
     it('can stop actors from system level', function () {
@@ -66,7 +63,7 @@ describe('system.stop', function() {
         };
 
         const guardianRef = system.actorOf(Guardian, 'guardian-01');
-        guardianRef.tell('interrupt-child').subscribe();
+        system.tell(guardianRef, 'interrupt-child').subscribe();
         scheduler.flush();
         assert.deepEqual(calls, [
             'Guardian postStart',

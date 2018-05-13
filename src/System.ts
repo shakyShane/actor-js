@@ -24,7 +24,7 @@ import {concat, EMPTY, merge, zip} from "rxjs";
 import {scan} from "rxjs/internal/operators";
 import {filter, map, mergeMap, take, tap, toArray, withLatestFrom} from "rxjs/operators";
 import {IRespondableStream} from "./patterns/mapped-methods";
-import {IMessageResponse, IncomingMessage, IOutgoingMessage, IOutgoingResponseFromStream} from "./types";
+import {IActorRef, IMessageResponse, IncomingMessage, IOutgoingMessage, IOutgoingResponseFromStream} from "./types";
 
 const logger = debug("acjs:System");
 const lifecycleLogger = debug("acjs:lifecycle");
@@ -68,7 +68,7 @@ export class System {
         return stream.pipe(
             withLatestFrom(state$, (msg: IncomingMessage, state) => {
                 const { address, action, contextCreator } = msg.message;
-                const sender = new ActorRef(contextCreator, system);
+                const sender = new ActorRef(contextCreator);
                 return {
                     payload: action.payload,
                     respond: (resp: any, stateUpdate?: any) => {
@@ -92,6 +92,10 @@ export class System {
     public address = "/system";
     public messageScheduler: SchedulerLike;
     public timeScheduler: SchedulerLike;
+
+    public errors = {
+        InvalidActorRef: `The first argument should be an IActorRef, with at least an 'address' property`,
+    };
 
     constructor(opts: ICreateOptions) {
         // global actorRegister of available actors
@@ -231,7 +235,7 @@ export class System {
             match.call(null, actor, context);
         }
 
-        return new ActorRef(actor.address, this, contextCreator);
+        return new ActorRef(actor.address, contextCreator);
     }
 
     public reincarnate(address, factoryMethod): Observable<any> {
@@ -269,7 +273,7 @@ export class System {
 
         return addresses
             .filter(matcher)
-            .map((address) => new ActorRef(address, this, contextCreator));
+            .map((address) => new ActorRef(address, contextCreator));
     }
 
     public stopActor(actorRef: ActorRef): Observable<any> {
@@ -318,7 +322,31 @@ export class System {
         const boundStop = this.stop.bind(this);
         const gracefulStop = this.gracefulStop.bind(this);
         const parentRef = this.getParentRef(parentAddress);
-        const self = new ActorRef(parentAddress, this);
+        const self = new ActorRef(parentAddress);
+
+        const tell = (ref: IActorRef, type: string, payload?: any) => {
+            if (!ref.address || typeof ref.address !== "string") {
+                return throwError(new Error(this.errors.InvalidActorRef));
+            }
+            const outgoing = {
+                action: {type, payload},
+                address: ref.address,
+                contextCreator: ref.contextCreator,
+            };
+            return this.tell(outgoing);
+        };
+
+        const ask = (ref: IActorRef, type: string, payload?: any) => {
+            if (!ref.address || typeof ref.address !== "string") {
+                return throwError(new Error(this.errors.InvalidActorRef));
+            }
+            const outgoing = {
+                action: {type, payload},
+                address: ref.address,
+                contextCreator: ref.contextCreator,
+            };
+            return this.ask(outgoing);
+        };
 
         return {
             actorOf(factory, localAddress?): ActorRef {
@@ -331,6 +359,7 @@ export class System {
             actorSelection(search): ActorRef[] {
                 return boundSelection(search, parentAddress);
             },
+            ask,
             cleanupCancelledMessages,
             gracefulStop,
             messageScheduler: this.messageScheduler,
@@ -338,6 +367,7 @@ export class System {
             scheduler: this.messageScheduler,
             self,
             stop: boundStop,
+            tell,
             timeScheduler: this.timeScheduler,
         };
     }
@@ -356,14 +386,14 @@ export class System {
             filter((x) => x.respId === messageID),
         );
 
-        const cancelations = this.cancelations.pipe(
+        const cancellations = this.cancelations.pipe(
             filter((x) => x.respId === messageID)
             , map((x) => {
                 return Object.assign({}, x, {cancelled: true});
             }),
         );
 
-        const trackResponse = merge(responses, cancelations).pipe(
+        const trackResponse = merge(responses, cancellations).pipe(
             take(1)
             , tap((x) => messageLogger("ask resp <-", x))
             , mergeMap((incoming: IMessageResponse) => {
@@ -412,7 +442,7 @@ export class System {
 
     public getParentRef(address): ActorRef {
         const parentAddress = address.split("/").slice(0, -1);
-        return new ActorRef(parentAddress.join("/"), this);
+        return new ActorRef(parentAddress.join("/"));
     }
 
     public createGracefulStopSequence(actorRef: ActorRef): Observable<any> {

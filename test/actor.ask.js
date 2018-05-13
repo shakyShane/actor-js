@@ -4,8 +4,8 @@ const { createSystem } = require('../');
 
 describe('actor.ask', function() {
     it('can ask an actor for a response', function (done) {
-        const system = createSystem();
-        const actor = system.actorOf(function(address, context) {
+        const {actorOf, ask} = createSystem();
+        const actor = actorOf(function(address, context) {
             return {
                 receive(name, payload, respond) {
                     if (name === 'init') {
@@ -16,14 +16,14 @@ describe('actor.ask', function() {
                 }
             }
         });
-        actor.ask('init', ['src', 'fixtures']).subscribe(resp => {
+        ask(actor, 'init', ['src', 'fixtures']).subscribe(resp => {
             assert.equal(resp, 2, 'responds with array length');
             done();
         });
     });
     it('can handle a type without payload', function (done) {
-        const system = createSystem();
-        const actor = system.actorOf(function() {
+        const {actorOf, ask} = createSystem();
+        const actor = actorOf(function() {
             return {
                 receive(name, payload, respond) {
                     if (name === 'init') {
@@ -32,19 +32,19 @@ describe('actor.ask', function() {
                 }
             }
         });
-        actor.ask('init').subscribe(resp => {
+        ask(actor, 'init').subscribe(resp => {
             assert.isUndefined(resp);
             done();
         });
     });
-    it('can handle a type without payload', function (done) {
-        const system = createSystem();
-        const actor = system.actorOf(function() {
+    it('can handle a type without payload (2)', function (done) {
+        const {actorOf, tell} = createSystem();
+        const actor = actorOf(function(address, {tell}) {
             let lastSender;
 
             function send() {
                 if (lastSender) {
-                    lastSender.tell('pong!').subscribe();
+                    tell(lastSender, 'pong!').subscribe();
                 }
             }
             return {
@@ -58,12 +58,12 @@ describe('actor.ask', function() {
         }, 'first');
 
         const calls = [];
-        const actor2 = system.actorOf(function(address, context) {
+        const actor2 = actorOf(function(address, {ask, actorSelection}) {
             return {
                 receive(name, payload, respond, sender) {
                     if (name === 'start') {
-                        const first = context.actorSelection('/system/first')[0];
-                        first.ask('ping').subscribe();
+                        const first = actorSelection('/system/first')[0];
+                        ask(first, 'ping').subscribe();
                     } else {
                         try {
                             assert.equal(name, 'pong!');
@@ -76,36 +76,36 @@ describe('actor.ask', function() {
             }
         });
 
-        actor2.tell('start').subscribe();
+        tell(actor2, 'start').subscribe();
     });
     it('challenge: Can model progress', function (done) {
 
         const system = createSystem();
 
-        function downloadFile(payload, sender) {
-            sender.tell('start', payload).subscribe();
-            sender.tell('progress', '10').subscribe();
-            sender.tell('progress', '10').subscribe();
-            sender.tell('progress', '20').subscribe();
-            sender.tell('progress', '30').subscribe();
-            sender.tell('complete', '100kb').subscribe();
+        function downloadFile(payload, tell, sender) {
+            tell(sender, 'start', payload).subscribe();
+            tell(sender, 'progress', '10').subscribe();
+            tell(sender, 'progress', '10').subscribe();
+            tell(sender, 'progress', '20').subscribe();
+            tell(sender, 'progress', '30').subscribe();
+            tell(sender, 'complete', '100kb').subscribe();
         }
 
-        const downloader = function() {
+        const downloader = function(address, {tell}) {
             return {
                 receive(name, payload, respond, sender) {
-                    downloadFile(payload, sender);
+                    downloadFile(payload, tell, sender);
                     respond('Sorted!');
                 }
             }
         };
 
         const calls = [];
-        system.actorOf(function(address, context) {
+        system.actorOf(function(address, {ask, actorOf}) {
             return {
                 postStart() {
-                    const down = context.actorOf(downloader);
-                    down.ask('download', '/shane.mp3').subscribe();
+                    const down = actorOf(downloader);
+                    ask(down, 'download', '/shane.mp3').subscribe();
                 },
                 receive(name, payload) {
                     calls.push([name, payload]);

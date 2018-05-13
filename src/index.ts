@@ -23,7 +23,7 @@ export interface ICreateOptions {
 
 type RegisterFn = (register: {[index: string]: IActor}, IActor) => {[index: string]: IActor};
 
-export function createSystem(opts: ICreateOptions = {}): System {
+export function createSystem(opts: ICreateOptions = {}): {system: System} & IActorContext {
 
     const system = new System(opts);
 
@@ -59,7 +59,7 @@ export function createSystem(opts: ICreateOptions = {}): System {
                         const factory = actor._factoryMethod;
                         return concat(
                             system.restartActor(actor),
-                            system.removeActor(new ActorRefFn(actor.address, system)),
+                            system.removeActor(new ActorRefFn(actor.address)),
                             system.reincarnate(address, factory),
                         ).subscribe();
                     }
@@ -97,7 +97,9 @@ export function createSystem(opts: ICreateOptions = {}): System {
     // register the /system actor
     system.actorOf(opts.factory || SystemActor, "/system");
 
-    return system;
+    const ctx = system.createContext("/system");
+
+    return {system, ...ctx};
 }
 
 export {

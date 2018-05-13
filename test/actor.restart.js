@@ -7,7 +7,7 @@ const { System } = require('../dist/System');
 
 it('an actor can recover from a termination', function () {
     const scheduler = new TestScheduler();
-    const system = createSystem({
+    const {system, actorOf, tell} = createSystem({
         messageScheduler: scheduler
     });
     let calls = [];
@@ -29,18 +29,18 @@ it('an actor can recover from a termination', function () {
         }
     };
 
-    const Guardian = function (address, context) {
+    const Guardian = function (address, {actorOf, tell}) {
         let children = [];
         return {
             receive() {
-                children.push(context.actorOf(Child, 'c'));
-                children[0].tell('error1').subscribe();
+                children.push(actorOf(Child, 'c'));
+                tell(children[0], 'error1').subscribe();
             }
         }
     };
 
-    const actorRef = system.actorOf(Guardian, 'guardian-01');
-    actorRef.tell('msg').subscribe();
+    const actorRef = actorOf(Guardian, 'guardian-01');
+    tell(actorRef, 'msg').subscribe();
     scheduler.flush();
     assert.deepEqual([
         [ 'preRestart', 1 ],

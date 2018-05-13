@@ -6,9 +6,9 @@ const { createSystem } = require('../');
 
 describe('actor.tell', function() {
     it('can fire and forget messages without waiting for a response', function (done) {
-        const system = createSystem();
+        const {tell, actorOf} = createSystem();
         const calls = [];
-        const actor = system.actorOf(function(address, context) {
+        const actor = actorOf(function(address, context) {
             return {
                 receive(name, payload, respond) {
                     calls.push([name, payload]);
@@ -16,9 +16,9 @@ describe('actor.tell', function() {
             }
         });
         concat(
-            actor.tell('1', '1'),
-            actor.tell('2', '2'),
-            actor.tell('3', '3')
+            tell(actor, '1', '1'),
+            tell(actor, '2', '2'),
+            tell(actor, '3', '3')
         ).pipe(toArray()).subscribe(wow => {
             assert.deepEqual(calls,
                 [

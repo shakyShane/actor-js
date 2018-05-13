@@ -5,7 +5,7 @@ const {last, switchMap} = require('rxjs/operators');
 const { createSystem } = require('../');
 
 describe('actor + state', function() {
-    it('can mutate state ready for next message', function(done) {
+    it('can update state ready for next message', function(done) {
         const calls = [];
         function count(stream) {
             return stream.pipe(
@@ -24,12 +24,12 @@ describe('actor + state', function() {
                 }
             }
         }
-        const system = createSystem();
-        const a = system.actorOf(Ac);
+        const {actorOf, ask} = createSystem();
+        const a = actorOf(Ac);
 
         concat(
-            a.ask('count', 'inc'),
-            a.ask('count', 'inc')
+            ask(a, 'count', 'inc'),
+            ask(a, 'count', 'inc')
         ).pipe(last())
             .subscribe((output) => {
                 assert.equal(output, 2);

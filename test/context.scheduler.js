@@ -14,11 +14,11 @@ describe('context.scheduler', function () {
             messageScheduler: scheduler
         });
         const calls = [];
-        const Child = function(address, context) {
+        const Child = function(address, {scheduler}) {
             return {
                 setupReceive(stream) {
                     return stream.pipe(
-                        delay(2000, context.scheduler)
+                        delay(2000, scheduler)
                         , map(original => patterns.createResponse(original, 'shane'))
                         , tap(x => calls.push(x.resp))
                     );
@@ -26,7 +26,7 @@ describe('context.scheduler', function () {
             }
         };
         const actorRef = system.actorOf(Child, 'p');
-        actorRef.tell('shane').subscribe();
+        system.tell(actorRef, 'shane').subscribe();
         scheduler.advanceTo(2001);
         assert.deepEqual(calls, ['shane']);
     });
