@@ -32,7 +32,7 @@ describe('mailboxes', function() {
             );
     });
 
-    it('works with simple events', function(done) {
+    it('works with switchMap events', function(done) {
         const {actorOf, ask} = createSystem();
 
         const Child = function () {
@@ -41,7 +41,7 @@ describe('mailboxes', function() {
                     'shane': function(stream) {
                         return stream.pipe(
                             switchMap(({payload, respond}) => {
-                                return of(respond(payload)).pipe(delay(1));
+                                return of(respond(payload));
                             })
                         )
                     }

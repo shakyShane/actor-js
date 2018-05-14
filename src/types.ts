@@ -1,3 +1,6 @@
+import {Observable} from "rxjs";
+import {IMethodStream} from "./patterns";
+
 export type AskFnBound = (ref: IActorRef, name: string, payload?: any, id?: string) => any;
 export type AskFn = (name: string, payload?: any, id?: string) => any;
 export type TellFn = (name: string, payload?: any, id?: string) => any;
@@ -40,4 +43,4 @@ export interface IOutgoingResponseFromStream {
     state?: any;
 }
 
-export type Method = (payload: any) => any;
+export type StreamHandler = (stream: IMethodStream<any, any, any>) => Observable<IMessageResponse>;
