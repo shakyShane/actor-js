@@ -8,7 +8,7 @@ import {
     Subject,
     Subscription, throwError,
 } from "rxjs";
-import {IActor} from "./createActor";
+import {createActor, IActor} from "./createActor";
 
 import anymatch = require("anymatch");
 import {setMaxListeners} from "cluster";
@@ -16,7 +16,6 @@ import debug = require("debug");
 import uuid = require("uuid/v4");
 import {IActorContext} from "./ActorContext";
 import {ActorRef} from "./ActorRef";
-import {createDefaultMailbox} from "./createDefaultMailbox";
 import {ICreateOptions} from "./index";
 import * as patterns from "./patterns";
 
@@ -24,7 +23,14 @@ import {concat, EMPTY, merge, zip} from "rxjs";
 import {scan} from "rxjs/internal/operators";
 import {filter, map, mergeMap, take, tap, toArray, withLatestFrom} from "rxjs/operators";
 import {invalidActorRefError} from "./System.errors";
-import {addResponse, filterByType, isActorRef, warnInvalidActorRef} from "./System.utils";
+import {
+    addResponse,
+    decorateActor,
+    filterByType,
+    getParentRef,
+    isActorRef,
+    warnInvalidActorRef,
+} from "./System.utils";
 import {IActorRef, IMessageResponse, IncomingMessage, IOutgoingMessage, IOutgoingResponseFromStream} from "./types";
 
 const logger = debug("acjs:System");
@@ -76,8 +82,8 @@ export class System {
 
         const actorAddress = this.createActorAddress(address);
         const context      = this.createContext(actorAddress);
-        const actor        = this.createActor(actorFactory, actorAddress, context);
-        const decorated    = this.decorateActor(actor, actorAddress, actorFactory);
+        const actor        = createActor(actorFactory, actorAddress, context);
+        const decorated    = decorateActor(actor, actorAddress, actorFactory);
 
         return this.initActor(decorated, context, actorAddress, actorFactory, contextCreator);
     }
@@ -96,7 +102,7 @@ export class System {
         }
 
         const filtered = filterByType(stream, type);
-        const output = fn(addResponse(filtered, state$, this));
+        const output = fn(addResponse(filtered, state$));
 
         const collated = filtered.pipe(
             scan((acc, item: IncomingMessage) => {
@@ -126,19 +132,6 @@ export class System {
                 return out;
             }),
         );
-    }
-
-    public decorateActor(actor, address, factory) {
-
-        actor.mailbox = createDefaultMailbox(actor);
-
-        actor._factoryMethod = factory;
-
-        if (!actor.address) {
-            actor.address = address;
-        }
-
-        return actor;
     }
 
     public initActor(actor: IActor, context, address, factory, contextCreator: string): ActorRef {
@@ -191,8 +184,8 @@ export class System {
     public reincarnate(address, factoryMethod): Observable<any> {
         return Observable.create((observer) => {
             const context   = this.createContext(address);
-            const newActor  = this.createActor(factoryMethod, address, context);
-            const decorated = this.decorateActor(newActor, address, factoryMethod);
+            const newActor  = createActor(factoryMethod, address, context);
+            const decorated = decorateActor(newActor, address, factoryMethod);
 
             if (decorated.postRestart) {
                 lifecycleLogger("postRestart", address);
@@ -243,9 +236,7 @@ export class System {
     }
 
     public restartActor(actor: IActor): Observable<any> {
-        const self = this;
         return Observable.create((observer) => {
-            // console.log('private stopActor CREATE', Object.keys(reg));
             if (actor.preRestart) {
                 lifecycleLogger("preRestart", actor.address);
                 actor.preRestart();
@@ -261,17 +252,13 @@ export class System {
         );
     }
 
-    public createActor(factory, address: string, context: IActorContext): IActor {
-        return new factory(address, context);
-    }
-
     public createContext(parentAddress: string): IActorContext {
         const bound = this.actorOf.bind(this);
         const boundSelection = this.actorSelection.bind(this);
         const cleanupCancelledMessages = this.cleanupCancelledMessages.bind(this);
         const boundStop = this.stop.bind(this);
         const gracefulStop = this.gracefulStop.bind(this);
-        const parentRef = this.getParentRef(parentAddress);
+        const parentRef = getParentRef(parentAddress);
         const self = new ActorRef(parentAddress);
 
         const tell = (ref: IActorRef, type: string, payload?: any) => {
@@ -388,11 +375,6 @@ export class System {
         }
 
         return path;
-    }
-
-    public getParentRef(address): ActorRef {
-        const parentAddress = address.split("/").slice(0, -1);
-        return new ActorRef(parentAddress.join("/"));
     }
 
     public createGracefulStopSequence(actorRef: ActorRef): Observable<any> {
