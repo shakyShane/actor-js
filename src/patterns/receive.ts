@@ -4,13 +4,14 @@ import {IActorContext} from "../ActorContext";
 import {IActor} from "../createActor";
 import {ActorRef} from "../ActorRef";
 import {IncomingMessage, IMessageResponse} from "../types";
+import {System} from "../System";
 
 export interface MessageSenderRef {
     id: string,
     reply(message: any): void
 }
 
-export function receive(actor: IActor, context: IActorContext, system) {
+export function receive(actor: IActor, context: IActorContext, system: System) {
     const {methods} = actor;
     const {incoming} = actor.mailbox;
 
@@ -21,10 +22,10 @@ export function receive(actor: IActor, context: IActorContext, system) {
 
             return Observable.create((obs: Observer<IMessageResponse>) => {
 
-                const respond = (response) => obs.next({errors: [], response, respId});
+                const respond = (response: any) => obs.next({errors: [], response, respId});
 
                 if (actor.receive) {
-                    const sender = new ActorRef(contextCreator, system);
+                    const sender = new ActorRef(contextCreator);
                     try {
                         actor.receive(action.type, action.payload, respond, sender);
                     } catch(err) {

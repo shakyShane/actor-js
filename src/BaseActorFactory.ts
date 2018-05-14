@@ -1,5 +1,6 @@
 import {IActorContext} from "./ActorContext";
 import {IActorFactory} from "./SystemActor";
+import {IncomingMessage} from "./types";
 
 export class BaseActorFactory implements IActorFactory {
     public mailboxType = "default";
@@ -8,7 +9,7 @@ export class BaseActorFactory implements IActorFactory {
         return this;
     }
 
-    public receive(payload, message) {
+    public receive(payload: any, message: IncomingMessage) {
         // console.log('Should be overriden');
         // console.log('payload', 'message');
     }

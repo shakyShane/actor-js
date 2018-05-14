@@ -1,4 +1,3 @@
-import {Subscription} from 'rxjs';
 import {mappedMethods, IMethodStream} from './mapped-methods';
 import {receive} from './receive';
 import {askMany} from './askMany';

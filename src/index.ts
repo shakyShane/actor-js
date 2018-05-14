@@ -11,9 +11,6 @@ import {IMethodStream, IRespondableStream} from "./patterns/mapped-methods";
 import {System} from "./System";
 import {IActorFactory, SystemActor} from "./SystemActor";
 import {IActorRef, IMessageResponse, IncomingMessage} from "./types";
-const logger = debug("aktor-js");
-
-const log = (ns) => (message) => logger(`${ns}`, message);
 
 export interface ICreateOptions {
     messageScheduler?: Scheduler;
@@ -21,7 +18,7 @@ export interface ICreateOptions {
     factory?: IActorFactory;
 }
 
-type RegisterFn = (register: {[index: string]: IActor}, IActor) => {[index: string]: IActor};
+type RegisterFn = (register: {[index: string]: IActor}, actor: IActor|IActorRef) => {[index: string]: IActor};
 
 export function createSystem(opts: ICreateOptions = {}): {system: System} & IActorContext {
 

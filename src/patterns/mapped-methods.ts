@@ -5,7 +5,7 @@ import {BehaviorSubject, from, Subscription} from "rxjs";
 import {IncomingMessage, IMessageResponse, IOutgoingResponseFromStream} from "../types";
 import {catchError, map, mergeMap, tap} from "rxjs/internal/operators";
 
-type EffectFn = (stream: Observable<IncomingMessage>) => Observable<any>;
+export type EffectFn = (stream: Observable<IncomingMessage>) => Observable<any>;
 export type IRespondableStream = Observable<{respond: (response: any) => any, type: string, payload?:any}>
 
 export type IMethodStream<Payload, Response, State> = Observable<{
@@ -37,7 +37,7 @@ export function mappedMethods(actor: IActor, context: IActorContext) {
     return from(Object.keys(methods)).pipe(
         mergeMap(key => {
             const fn: EffectFn = methods[key];
-            return context.cleanupCancelledMessages(incoming, key, function(stream) {
+            return context.cleanupCancelledMessages(incoming, key, function(stream: Observable<any>) {
                 return fn(stream).pipe(
                     catchError((e: any): any => {
                         console.log(`Uncaught error from '${fn.name}'`);

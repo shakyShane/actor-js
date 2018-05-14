@@ -1,9 +1,10 @@
 import {Observable, Subject} from "rxjs";
+import {IActorContext} from "./ActorContext";
 import {IMailbox, MailboxType} from "./getMailbox";
-import {Effect, System} from "./System";
+import {Effect} from "./System";
 import {IActorRef, IncomingMessage, IOutgoingResponseFromStream, Method} from "./types";
 
-export function createActor(factory, address: string, context): IActor {
+export function createActor(factory: any, address: string, context: IActorContext): IActor {
     return new factory(address, context);
 }
 

@@ -11,7 +11,6 @@ import {
 import {createActor, IActor} from "./createActor";
 
 import anymatch = require("anymatch");
-import {setMaxListeners} from "cluster";
 import debug = require("debug");
 import uuid = require("uuid/v4");
 import {IActorContext} from "./ActorContext";
@@ -19,7 +18,7 @@ import {ActorRef} from "./ActorRef";
 import {ICreateOptions} from "./index";
 import * as patterns from "./patterns";
 
-import {concat, EMPTY, merge, zip} from "rxjs";
+import {concat, EMPTY, merge, zip, Observer} from "rxjs";
 import {scan} from "rxjs/internal/operators";
 import {filter, map, mergeMap, take, tap, toArray, withLatestFrom} from "rxjs/operators";
 import {invalidActorRefError} from "./System.errors";
@@ -33,10 +32,8 @@ import {
 } from "./System.utils";
 import {IActorRef, IMessageResponse, IncomingMessage, IOutgoingMessage, IOutgoingResponseFromStream} from "./types";
 
-const logger = debug("acjs:System");
 const lifecycleLogger = debug("acjs:lifecycle");
 const messageLogger = debug("acjs:message");
-const log = (ns) => (message) => logger(`${ns}`, message);
 
 export type Effect = (payload: any, message: IncomingMessage) => Observable<any>;
 
@@ -85,7 +82,7 @@ export class System {
         const actor        = createActor(actorFactory, actorAddress, context);
         const decorated    = decorateActor(actor, actorAddress, actorFactory);
 
-        return this.initActor(decorated, context, actorAddress, actorFactory, contextCreator);
+        return this.initActor(decorated, context, actorAddress, contextCreator);
     }
 
     /**
@@ -95,7 +92,10 @@ export class System {
      * @param state$
      * @returns {any}
      */
-    public cleanupCancelledMessages(stream, type: string, fn, state$?) {
+    public cleanupCancelledMessages(stream: Observable<any>,
+                                    type: string,
+                                    fn: any,
+                                    state$?: BehaviorSubject<any>): Observable<any> {
 
         if (!state$) {
             state$ = new BehaviorSubject(undefined);
@@ -134,7 +134,10 @@ export class System {
         );
     }
 
-    public initActor(actor: IActor, context, address, factory, contextCreator: string): ActorRef {
+    public initActor(actor: IActor,
+                     context: IActorContext,
+                     address: string,
+                     contextCreator: string): ActorRef {
 
         if (actor.preStart) {
             lifecycleLogger("preStart", address);
@@ -163,9 +166,9 @@ export class System {
         }
 
         if (actor.patterns) {
-            actor.patterns.forEach((pattern) => {
-                const match = patterns[pattern];
-                if (match) {
+            actor.patterns.forEach((pattern: any) => {
+                const match: any = (patterns as any)[pattern];
+                if (match && typeof match === "function") {
                     match.call(null, actor, context);
                 }
             });
@@ -181,8 +184,8 @@ export class System {
         return new ActorRef(actor.address, contextCreator);
     }
 
-    public reincarnate(address, factoryMethod): Observable<any> {
-        return Observable.create((observer) => {
+    public reincarnate(address: string, factoryMethod: () => IActor): Observable<any> {
+        return Observable.create((observer: Observer<IActor>) => {
             const context   = this.createContext(address);
             const newActor  = createActor(factoryMethod, address, context);
             const decorated = decorateActor(newActor, address, factoryMethod);
@@ -210,8 +213,8 @@ export class System {
         })();
 
         // strip any trailing slashes
-        const stripped = lookup.replace(/\/$/, "");
-        const matcher  = anymatch(stripped);
+        const stripped       = lookup.replace(/\/$/, "");
+        const matcher: any  = anymatch(stripped);
         const contextCreator = prefix;
 
         return addresses
@@ -221,7 +224,7 @@ export class System {
 
     public stopActor(actorRef: ActorRef): Observable<any> {
         const self = this;
-        return Observable.create((observer) => {
+        return Observable.create((observer: Observer<void>) => {
             const reg = self.actorRegister.getValue();
             const selectedActor = reg[actorRef.address];
             if (selectedActor) {
@@ -236,7 +239,7 @@ export class System {
     }
 
     public restartActor(actor: IActor): Observable<any> {
-        return Observable.create((observer) => {
+        return Observable.create((observer: Observer<void>) => {
             if (actor.preRestart) {
                 lifecycleLogger("preRestart", actor.address);
                 actor.preRestart();

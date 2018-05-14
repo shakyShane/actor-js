@@ -1,4 +1,5 @@
 import {BehaviorSubject, Observable, SchedulerLike} from "rxjs";
+import {System} from "./System";
 import {AskFnBound, IActorRef, IMessageResponse, IncomingMessage, TellFn, TellFnBound} from "./types";
 
 export interface IActorContext {
@@ -9,14 +10,9 @@ export interface IActorContext {
     self: IActorRef;
     ask: AskFnBound;
     tell: TellFnBound;
+    cleanupCancelledMessages: System["cleanupCancelledMessages"];
     actorOf(factory: () => any, address?: string): IActorRef;
-    actorSelection(search): IActorRef[];
+    actorSelection(search: string): IActorRef[];
     gracefulStop(actorRefs: IActorRef|IActorRef[]): Observable<any>;
-    stop(ActorRef): void;
-    cleanupCancelledMessages(
-        stream: Observable<IncomingMessage>,
-        type: string,
-        fn: (filteredStream: Observable<IncomingMessage>) => Observable<IMessageResponse>,
-        state$: BehaviorSubject<any>,
-    );
+    stop(ref: IActorRef): void;
 }
