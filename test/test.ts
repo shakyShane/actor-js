@@ -1,8 +1,4 @@
 import {createSystem} from "../src";
-
-declare var describe: any, it: any;
-
-import * as assert from 'assert';
 import {from} from "rxjs";
 import {
     concatMap,
@@ -11,11 +7,12 @@ import {
 } from "rxjs/internal/operators";
 import {IMethodStream} from "../src/patterns/mapped-methods";
 import {Observable} from "rxjs/Rx";
+import * as assert from "assert";
 
 describe('test', function() {
-    it('should work', function(done) {
+    it.only('should work', function(done) {
         const {actorOf, ask} = createSystem();
-
+        const calls = [];
         const ref = actorOf(function() {
             return {
                 methods: {
@@ -23,14 +20,14 @@ describe('test', function() {
                         return stream.pipe(
                             concatMap(({respond, payload, state}) => {
                                 return Observable.create(obs => {
-                                    console.log('start', payload);
+                                    calls.push(`start ${payload}`);
                                     const t = setTimeout(() => {
-                                        console.log('complete', payload);
+                                        calls.push(`complete ${payload}`);
                                         obs.next(respond(payload));
                                         obs.complete();
-                                    }, 500);
+                                    }, 100);
                                     return () => {
-                                        console.log('teardown', payload);
+                                        calls.push(`teardown ${payload}`);
                                         clearTimeout(t);
                                     }
                                 })
@@ -46,11 +43,21 @@ describe('test', function() {
             ask(ref, 'ping', '2'),
             ask(ref, 'ping', '3'),
         ]).pipe(mergeAll(), toArray()).subscribe((xs) => {
-            console.log('was done', xs);
-            done();
+            assert.deepEqual(xs, ['1', '2', '3']);
+            setTimeout(() => {
+                assert.deepEqual(calls, [
+                    'start 1',
+                    'complete 1',
+                    'start 2',
+                    'teardown 1',
+                    'complete 2',
+                    'start 3',
+                    'teardown 2',
+                    'complete 3',
+                    'teardown 3'
+                ]);
+                done();
+            }, 0)
         });
-        // ask(ref, 'ping', '1').subscribe();
-        // setTimeout(() => ask(ref, 'ping', '2').subscribe(), 100);
-        // setTimeout(() => ask(ref, 'ping', '3').subscribe(), 200);
     });
 });

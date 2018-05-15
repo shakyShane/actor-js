@@ -1,11 +1,11 @@
 require('source-map-support').install();
-const { assert } = require('chai');
-const { createSystem } = require('../');
+import { assert } from 'chai';
+import { createSystem } from '../';
 
 describe('actor.ask', function() {
     it('can ask an actor for a response', function (done) {
         const {actorOf, ask} = createSystem();
-        const actor = actorOf(function(address, context) {
+        const actor = actorOf(function() {
             return {
                 receive(name, payload, respond) {
                     if (name === 'init') {

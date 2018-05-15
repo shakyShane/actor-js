@@ -12,7 +12,7 @@ export interface IActorContext {
     ask: AskFnBound;
     tell: TellFnBound;
     cleanupCancelledMessages: System["cleanupCancelledMessages"];
-    actorOf(factory: () => IActorFactoryReturn, address?: string): IActorRef;
+    actorOf(factory: (address: string, content: IActorContext) => IActorFactoryReturn, address?: string): IActorRef;
     actorSelection(search: string): IActorRef[];
     gracefulStop(actorRefs: IActorRef|IActorRef[]): Observable<any>;
     stop(ref: IActorRef): void;

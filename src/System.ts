@@ -19,7 +19,7 @@ import {ICreateOptions} from "./index";
 import * as patterns from "./patterns";
 
 import {concat, EMPTY, merge, Observer, zip} from "rxjs";
-import {reduce, scan} from "rxjs/internal/operators";
+import {delay, reduce, scan, subscribeOn} from "rxjs/internal/operators";
 import {filter, map, mergeMap, take, tap, toArray, withLatestFrom} from "rxjs/operators";
 import {invalidActorRefError} from "./System.errors";
 import {
@@ -31,6 +31,7 @@ import {
     warnInvalidActorRef,
 } from "./System.utils";
 import {IActorRef, IMessageResponse, IncomingMessage, IOutgoingMessage, IOutgoingResponseFromStream} from "./types";
+import {async} from "rxjs/internal/scheduler/async";
 
 const lifecycleLogger = debug("acjs:lifecycle");
 const messageLogger = debug("acjs:message");
@@ -348,6 +349,8 @@ export class System {
         );
 
         const messageSender = of({message, messageID}, this.messageScheduler).pipe(
+            subscribeOn(async),
+            delay(100),
             tap((x) => messageLogger("ask outgoing ->", x))
             , tap((outgoingMessage) => this.arbiter.next(outgoingMessage)),
         );

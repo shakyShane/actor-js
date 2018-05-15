@@ -9,6 +9,7 @@
     "noImplicitAny": false
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "types/test.types.d.ts"
   ]
 }
