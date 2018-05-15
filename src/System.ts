@@ -20,6 +20,7 @@ import * as patterns from "./patterns";
 
 import {concat, EMPTY, merge, Observer, zip} from "rxjs";
 import {delay, reduce, scan, subscribeOn} from "rxjs/internal/operators";
+import {async} from "rxjs/internal/scheduler/async";
 import {filter, map, mergeMap, take, tap, toArray, withLatestFrom} from "rxjs/operators";
 import {invalidActorRefError} from "./System.errors";
 import {
@@ -31,7 +32,6 @@ import {
     warnInvalidActorRef,
 } from "./System.utils";
 import {IActorRef, IMessageResponse, IncomingMessage, IOutgoingMessage, IOutgoingResponseFromStream} from "./types";
-import {async} from "rxjs/internal/scheduler/async";
 
 const lifecycleLogger = debug("acjs:lifecycle");
 const messageLogger = debug("acjs:message");
