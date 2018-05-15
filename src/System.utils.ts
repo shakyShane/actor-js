@@ -3,6 +3,7 @@ import {filter, withLatestFrom} from "rxjs/operators";
 import {ActorRef} from "./ActorRef";
 import {IActor} from "./createActor";
 import {createDefaultMailbox} from "./createDefaultMailbox";
+
 import {IRespondableStream} from "./patterns/mapped-methods";
 import {IncomingMessage} from "./types";
 
@@ -57,7 +58,7 @@ export function getParentRef(address: string): ActorRef {
     return new ActorRef(parentAddress.join("/"));
 }
 
-export function decorateActor(actor: IActor, address: string, factory: () => IActor) {
+export function decorateActor(actor: IActor, address: string, factory: any) {
 
     actor.mailbox = createDefaultMailbox(actor);
 

@@ -10,7 +10,7 @@ import {Observable} from "rxjs/Rx";
 import * as assert from "assert";
 
 describe('test', function() {
-    it.only('should work', function(done) {
+    it('should work', function(done) {
         const {actorOf, ask} = createSystem();
         const calls = [];
         const ref = actorOf(function() {

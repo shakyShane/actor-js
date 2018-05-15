@@ -1,5 +1,4 @@
-import debug = require("debug");
-import {concat, merge, Observable, Scheduler} from "rxjs";
+import {concat, merge, SchedulerLike} from "rxjs";
 import {filter, map, mergeMap, scan, tap, withLatestFrom} from "rxjs/operators";
 import {IActorContext} from "./ActorContext";
 import {ActorRef as ActorRefFn} from "./ActorRef";
@@ -13,8 +12,8 @@ import {IActorFactory, SystemActor} from "./SystemActor";
 import {IActorRef, IMessageResponse, IncomingMessage} from "./types";
 
 export interface ICreateOptions {
-    messageScheduler?: Scheduler;
-    timeScheduler?: Scheduler;
+    messageScheduler?: SchedulerLike;
+    timeScheduler?: SchedulerLike;
     factory?: IActorFactory;
 }
 

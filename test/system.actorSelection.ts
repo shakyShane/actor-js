@@ -11,6 +11,8 @@ describe('system.actorSelection', function () {
             messageScheduler: scheduler
         });
         const Guardian = class {
+            public type: string;
+            public address: string;
             constructor(address) {
                 this.type = 'Guardian';
                 this.address = address;
@@ -31,6 +33,8 @@ describe('system.actorSelection', function () {
             messageScheduler: scheduler
         });
         const Guardian = class {
+            public type: string;
+            public address: string;
             constructor(address) {
                 this.type = 'Guardian';
                 this.address = address;
@@ -41,6 +45,8 @@ describe('system.actorSelection', function () {
             }
         };
         const Guardian2 = class {
+            public type: string;
+            public address: string;
             constructor(address) {
                 this.type = 'Guardian2';
                 this.address = address;

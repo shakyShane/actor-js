@@ -1,3 +1,5 @@
+import {IActorContext, IActorRef} from "../src";
+
 require('source-map-support').install();
 const { assert } = require('chai');
 const { createSystem } = require('../');
@@ -11,6 +13,9 @@ describe('context.parent', function () {
         });
         const calls = [];
         const Parent = class {
+            public address: string;
+            public context: IActorContext;
+            public children: IActorRef[];
             constructor(address, context) {
                 this.address = address;
                 this.context = context;

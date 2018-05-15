@@ -1,3 +1,5 @@
+import {IActorContext, IActorRef} from "../src";
+
 require('source-map-support').install();
 const { assert } = require('chai');
 const { createSystem } = require('../');
@@ -12,6 +14,8 @@ describe('system.actorOf', function() {
   it('it can create a /system level actor', function () {
       const system = createSystem();
       const FileWatcher = class {
+          public type: string;
+          public address: string;
           constructor(address) {
               this.type = 'FileWatcher';
               this.address = address;
@@ -30,12 +34,18 @@ describe('system.actorOf', function() {
           messageScheduler: scheduler
       });
       const Watcher = class {
+          public type: string;
+          public address: string;
           constructor(address) {
               this.type        = 'Watcher';
               this.address = address;
           }
       };
       const FileWatcher = class {
+          public type: string;
+          public address: string;
+          public actors: IActorRef[];
+          public context: IActorContext;
           constructor(address, context) {
               this.type        = 'FileWatcher';
               this.address     = address;
@@ -66,8 +76,10 @@ describe('system.actorOf', function() {
           messageScheduler: scheduler
       });
       const Watcher = class {
+          public type: string;
+          public address: string;
           constructor(address) {
-              this.type        = 'Watcher';
+              this.type    = 'Watcher';
               this.address = address;
           }
           receive(name) {
@@ -75,6 +87,10 @@ describe('system.actorOf', function() {
           }
       };
       const FileWatcher = class {
+          public type: string;
+          public address: string;
+          public actors: IActorRef[];
+          public context: IActorContext;
           constructor(address, context) {
               this.type        = 'FileWatcher';
               this.address     = address;
@@ -107,8 +123,10 @@ describe('system.actorOf', function() {
           messageScheduler: scheduler
       });
       const GrandchildActor = class {
+          public type: string;
+          public address: string;
           constructor(address) {
-              this.type        = 'GrandchildActor';
+              this.type    = 'GrandchildActor';
               this.address = address;
           }
           receive(name) {
@@ -116,19 +134,26 @@ describe('system.actorOf', function() {
           }
       };
       const ChildActor = class {
+          public type: string;
+          public address: string;
+          public actors: IActorRef[];
           constructor(address, context) {
-              this.type        = 'ChildActor';
+              this.type = 'ChildActor';
               this.address = address;
               this.actors = [
                   context.actorOf(GrandchildActor)
               ];
               context.tell(this.actors[0], 'Hey from the grandchild!').subscribe();
           }
-          receive(payload) {
+          receive() {
               // console.log('Re'
           }
       };
       const SystemLevelActor = class {
+          public type: string;
+          public address: string;
+          public actors: IActorRef[];
+          public context: IActorContext;
           constructor(address, context) {
               this.type        = 'SystemLevelActor';
               this.address     = address;

@@ -1,14 +1,15 @@
+import {tap} from "rxjs/internal/operators";
+
 require('source-map-support').install();
-const { assert } = require('chai');
-const { createSystem } = require('../');
-const { TestScheduler } = require('rxjs/testing/TestScheduler');
+import { assert } from 'chai';
+import { TestScheduler } from 'rxjs/testing/TestScheduler';
+import {createSystem} from "../src";
+
+const noop = () => {};
 
 describe('system.stop', function() {
-    it('can stop actors from system level', function () {
-        const scheduler = new TestScheduler();
-        const system = createSystem({
-            messageScheduler: scheduler
-        });
+    it('can stop actors from system level', function (done) {
+        const system = createSystem();
         let calls = 0;
         const Guardian = function (address, context) {
             return {
@@ -24,15 +25,14 @@ describe('system.stop', function() {
 
         const actorRef = system.actorOf(Guardian, 'guardian-01');
         system.stop(actorRef);
-        scheduler.flush();
-        assert.equal(calls, 2);
+        setTimeout(() => {
+            assert.equal(calls, 2);
+            done();
+        }, 0);
     });
 
-    it('can stop actors from actor level', function () {
-        const scheduler = new TestScheduler();
-        const system = createSystem({
-            messageScheduler: scheduler
-        });
+    it('can stop actors from actor level', function (done) {
+        const system = createSystem();
         let calls = [];
         const Child = function () {
             return {
@@ -64,19 +64,18 @@ describe('system.stop', function() {
 
         const guardianRef = system.actorOf(Guardian, 'guardian-01');
         system.tell(guardianRef, 'interrupt-child').subscribe();
-        scheduler.flush();
-        assert.deepEqual(calls, [
-            'Guardian postStart',
-            'child receive stop',
-            'child postStop',
-        ]);
+        setTimeout(() => {
+            assert.deepEqual(calls, [
+                'Guardian postStart',
+                'child receive stop',
+                'child postStop',
+            ]);
+            done();
+        }, 5);
     });
 
-    it('can stop a system level actor + its children', function () {
-        const scheduler = new TestScheduler();
-        const system = createSystem({
-            messageScheduler: scheduler
-        });
+    it('can stop a system level actor + its children', function (done) {
+        const system = createSystem();
         let calls = [];
         const Child = function () {
             return {
@@ -114,24 +113,22 @@ describe('system.stop', function() {
 
         const guardianRef = system.actorOf(Guardian, 'guardian-01');
         system.stop(guardianRef);
-        scheduler.flush();
-
-        [
-            'Guardian postStart',
-            'Guardian receive stop',
-            'child receive stop',
-            'Guardian poststop',
-            'child postStop'
-        ].forEach(function (call) {
-            assert.include(calls, call, 'assert messages were received, order is not guaranteed');
-        });
+        setTimeout(() => {
+            [
+                'Guardian postStart',
+                'Guardian receive stop',
+                'child receive stop',
+                'Guardian poststop',
+                'child postStop'
+            ].forEach(function (call) {
+                assert.include(calls, call, 'assert messages were received, order is not guaranteed');
+            });
+            done();
+        }, 5);
     });
 
-    it('can stop actors gracefully', function () {
-        const scheduler = new TestScheduler();
-        const system = createSystem({
-            messageScheduler: scheduler
-        });
+    it('can stop actors gracefully', function (done) {
+        const system = createSystem();
         let calls = [];
         const Child = function () {
             return {
@@ -167,24 +164,23 @@ describe('system.stop', function() {
 
         const guardianRef = system.actorOf(Guardian, 'guardian-01');
 
-        system.gracefulStop(guardianRef).subscribe();
-
-        scheduler.flush();
-
-        assert.deepEqual(calls, [
-            'Guardian postStart',
-            'Guardian receive stop',
-            'child receive stop',
-            'child postStop',
-            'Guardian poststop'
-        ]);
+        system.gracefulStop(guardianRef)
+            .subscribe(() => {
+                setTimeout(() => {
+                    assert.deepEqual(calls, [
+                        'Guardian postStart',
+                        'Guardian receive stop',
+                        'child receive stop',
+                        'child postStop',
+                        'Guardian poststop'
+                    ]);
+                    done();
+                }, 0);
+            });
     });
 
-    it('removes a stopped actor from the register', function () {
-        const scheduler = new TestScheduler();
-        const system = createSystem({
-            messageScheduler: scheduler
-        });
+    it('removes a stopped actor from the register', function (done) {
+        const system = createSystem();
         let calls = [];
         const Guardian = function (address, context) {
             return {
@@ -201,9 +197,10 @@ describe('system.stop', function() {
 
         system.stop(guardianRef);
 
-        scheduler.flush();
-
-        assert.deepEqual(calls, [ 'Guardian receive stop', 'Guardian poststop' ]);
-        assert.equal(system.actorSelection('guardian-01').length, 0);
+        setTimeout(() => {
+            assert.deepEqual(calls, [ 'Guardian receive stop', 'Guardian poststop' ]);
+            assert.equal(system.actorSelection('guardian-01').length, 0);
+            done();
+        }, 5);
     });
 });
